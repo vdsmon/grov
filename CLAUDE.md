@@ -32,16 +32,30 @@ Opinionated bare-repo-only git worktree manager (Rust CLI).
 - Config in `repo.git/.grov.toml` stores worktree prefix
 - `worktree_dir(bare_repo, branch, prefix)` builds sibling path
 - `find_bare_repo()` checks for `repo.git` child in current/parent dirs
-- Edition 2021, MSRV 1.85, rustfmt edition 2024
+- Edition 2024, MSRV 1.93, rustfmt edition 2024
 - `run_git()` returns raw GitOutput; `run_git_ok()` errors on non-zero exit
 - `add_worktree()` signature: `(repo, path, commit_ish: Option<&str>, extra_args: &[&str])`
 - Use `GrovError` for domain errors (bad repo, missing branch); `anyhow` for command-level orchestration
 - New commands: add file in `src/commands/`, variant in `Commands` enum in `cli.rs`, dispatch arm in `lib.rs`
 
+## Init Command
+
+- All flags optional: `--url`, `--name`, `--prefix`, `--path`
+- Missing flags trigger interactive prompts on stderr
+- Creates `<name>/repo.git/` + `<name>/<prefix>_<default-branch>/` in cwd (or `--path`)
+
+## Releasing
+
+- `cargo release patch|minor|major --no-publish --no-confirm --execute` — bumps version, commits, tags, pushes
+- Release CI triggers on `v*` tags: builds binaries (4 targets), publishes to crates.io, creates GitHub Release
+- Requires `CARGO_REGISTRY_TOKEN` secret in GitHub repo settings for crates.io publishing
+
 ## Gotchas
 
 - rustfmt edition 2024 reformats aggressively — always run `cargo fmt` before `cargo clippy`
 - `assert_cmd` 2.x deprecated `cargo_bin`; test crate roots need `#![allow(deprecated)]`
+- Edition 2024 enables let-chains — clippy will flag nested `if let` + `if` as `collapsible_if`
+- `cargo-release` requires clean working tree (no untracked files) — gitignore or commit first
 
 ## Testing
 
