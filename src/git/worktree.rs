@@ -117,16 +117,16 @@ pub fn delete_branch(repo: &Path, name: &str) -> Result<()> {
 pub fn find_worktree<'a>(worktrees: &'a [WorktreeInfo], name: &str) -> Option<&'a WorktreeInfo> {
     worktrees.iter().find(|wt| {
         // Match by branch name
-        if let Some(ref branch) = wt.branch {
-            if branch == name {
-                return true;
-            }
+        if let Some(ref branch) = wt.branch
+            && branch == name
+        {
+            return true;
         }
         // Match by directory name
-        if let Some(dir_name) = wt.path.file_name() {
-            if dir_name.to_string_lossy() == name {
-                return true;
-            }
+        if let Some(dir_name) = wt.path.file_name()
+            && dir_name.to_string_lossy() == name
+        {
+            return true;
         }
         false
     })

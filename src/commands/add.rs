@@ -1,5 +1,6 @@
 use std::path::Path;
 
+use crate::config::read_config;
 use crate::git::executor::run_git_ok;
 use crate::git::repo::{default_branch, find_bare_repo};
 use crate::git::worktree::{add_worktree, branch_exists_local, branch_exists_remote};
@@ -8,6 +9,7 @@ use crate::paths::worktree_dir;
 pub fn execute(branch: &str, base: Option<&str>, custom_path: Option<&Path>) -> anyhow::Result<()> {
     let cwd = std::env::current_dir()?;
     let repo = find_bare_repo(&cwd)?;
+    let config = read_config(&repo);
 
     // Fetch latest
     let _ = run_git_ok(Some(&repo), &["fetch", "origin"]);
@@ -15,17 +17,12 @@ pub fn execute(branch: &str, base: Option<&str>, custom_path: Option<&Path>) -> 
     // Determine worktree path
     let wt_path = match custom_path {
         Some(p) => p.to_path_buf(),
-        None => worktree_dir(&repo, branch),
+        None => worktree_dir(&repo, branch, &config.worktree.prefix),
     };
 
     // Check if worktree dir already exists
     if wt_path.exists() {
         anyhow::bail!("worktree directory already exists at {}", wt_path.display());
-    }
-
-    // Ensure trees/ directory exists
-    if let Some(parent) = wt_path.parent() {
-        std::fs::create_dir_all(parent)?;
     }
 
     let remote_ref = format!("origin/{branch}");

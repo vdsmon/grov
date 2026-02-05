@@ -17,6 +17,7 @@ Opinionated bare-repo-only git worktree manager (Rust CLI).
 - `src/main.rs` → error formatting with red `error:` prefix, calls `grov::run()`
 - `src/lib.rs` → CLI parsing + command dispatch
 - `src/cli.rs` → clap derive structs (Cli, Commands enum)
+- `src/config.rs` → `GrovConfig` read/write for `.grov.toml` inside bare repo
 - `src/commands/{init,add,list,remove,completions}.rs` → command implementations
 - `src/git/executor.rs` → `run_git()` / `run_git_ok()` — single point for all git calls
 - `src/git/repo.rs` → bare repo discovery (`find_bare_repo`), default branch detection
@@ -27,7 +28,10 @@ Opinionated bare-repo-only git worktree manager (Rust CLI).
 
 ## Conventions
 
-- Worktrees live at `<bare_repo>/trees/<sanitized_branch>`
+- Sibling worktree layout: `<project>/repo.git/` + `<project>/<prefix>_<branch>/`
+- Config in `repo.git/.grov.toml` stores worktree prefix
+- `worktree_dir(bare_repo, branch, prefix)` builds sibling path
+- `find_bare_repo()` checks for `repo.git` child in current/parent dirs
 - Edition 2021, MSRV 1.85, rustfmt edition 2024
 - `run_git()` returns raw GitOutput; `run_git_ok()` errors on non-zero exit
 - `add_worktree()` signature: `(repo, path, commit_ish: Option<&str>, extra_args: &[&str])`
@@ -43,4 +47,4 @@ Opinionated bare-repo-only git worktree manager (Rust CLI).
 
 - Unit tests in `src/paths.rs` and `src/git/worktree.rs`
 - Integration tests in `tests/cli_{init,add,list,remove}.rs` using assert_cmd + tempfile
-- `tests/common/mod.rs` has `create_bare_repo()` helper — uses `#![allow(dead_code)]`
+- `tests/common/mod.rs` has `create_bare_repo()` helper — returns `(TempDir, bare_path, project_dir)`, uses `#![allow(dead_code)]`

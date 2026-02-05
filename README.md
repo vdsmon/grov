@@ -14,10 +14,10 @@ Or download a binary from [Releases](https://github.com/victordsm/grov/releases)
 
 ```sh
 # Clone a repo as bare and create an initial worktree
-grov init https://github.com/user/project.git
+grov init --url https://github.com/user/project.git --prefix proj
 
 # Navigate into the worktree
-cd project.git/trees/main
+cd project/proj_main
 
 # Create a new worktree for a feature branch
 grov add feature/login
@@ -31,13 +31,14 @@ grov remove feature-login --delete-branch
 
 ## Commands
 
-### `grov init <url>`
+### `grov init`
 
-Clones a repository as a bare repo and creates an initial worktree for the default branch.
+Clones a repository as a bare repo and creates an initial worktree for the default branch. When flags are omitted, prompts interactively.
 
 ```sh
-grov init https://github.com/user/repo.git
-grov init https://github.com/user/repo.git --name myproject
+grov init --url https://github.com/user/repo.git --prefix rp
+grov init --url https://github.com/user/repo.git --name myproject --prefix mp
+grov init   # interactive: prompts for URL, name, and prefix
 ```
 
 ### `grov add <branch>`
@@ -88,17 +89,21 @@ grov completions fish > ~/.config/fish/completions/grov.fish
 
 ## How it works
 
-grov enforces a bare-repo layout where worktrees live under `trees/`:
+grov enforces a sibling worktree layout with a project alias prefix:
 
 ```
-project.git/           # bare repository
-├── trees/
-│   ├── main/          # worktree for main branch
-│   └── feature-login/ # worktree for feature/login branch
-├── HEAD
-├── config
-└── ...
+project/                    # project directory (created by grov init)
+├── repo.git/               # bare repository
+│   ├── .grov.toml          # config (worktree prefix, etc.)
+│   ├── HEAD
+│   ├── config
+│   └── ...
+├── proj_main/              # <prefix>_<sanitized-branch>
+├── proj_feature-login/     # <prefix>_<sanitized-branch>
+└── proj_dev/
 ```
+
+If the prefix is blank, worktrees are named by branch only (no prefix or underscore).
 
 ## License
 

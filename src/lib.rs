@@ -1,5 +1,6 @@
 pub mod cli;
 pub mod commands;
+pub mod config;
 pub mod errors;
 pub mod git;
 pub mod paths;
@@ -13,9 +14,19 @@ pub fn run() -> anyhow::Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::Init { url, name, path } => {
-            commands::init::execute(&url, name.as_deref(), path.as_deref())
-                .context("init failed")?;
+        Commands::Init {
+            url,
+            name,
+            prefix,
+            path,
+        } => {
+            commands::init::execute(
+                url.as_deref(),
+                name.as_deref(),
+                prefix.as_deref(),
+                path.as_deref(),
+            )
+            .context("init failed")?;
         }
         Commands::Add { branch, base, path } => {
             commands::add::execute(&branch, base.as_deref(), path.as_deref())

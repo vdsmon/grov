@@ -7,7 +7,7 @@ use predicates::prelude::*;
 use tempfile::TempDir;
 
 #[test]
-fn init_clones_bare_repo() {
+fn init_creates_project_with_bare_repo_and_worktree() {
     let tmp = TempDir::new().unwrap();
 
     // Create a source repo to clone from
@@ -25,23 +25,38 @@ fn init_clones_bare_repo() {
 
     AssertCommand::cargo_bin("grov")
         .unwrap()
-        .args(["init", source.to_str().unwrap()])
+        .args([
+            "init",
+            "--url",
+            source.to_str().unwrap(),
+            "--name",
+            "myproject",
+            "--prefix",
+            "mp",
+        ])
         .current_dir(&work_dir)
         .assert()
         .success()
-        .stdout(predicate::str::contains("Initialized bare repo at"));
+        .stdout(predicate::str::contains("Initialized myproject/"));
 
-    // Verify bare repo was created
-    let bare_path = work_dir.join("source.git");
+    // Verify project dir created
+    let project_dir = work_dir.join("myproject");
+    assert!(project_dir.exists());
+
+    // Verify bare repo inside project dir
+    let bare_path = project_dir.join("repo.git");
     assert!(bare_path.exists());
 
-    // Verify a worktree was created
-    let trees_dir = bare_path.join("trees");
-    assert!(trees_dir.exists());
+    // Verify .grov.toml written
+    assert!(bare_path.join(".grov.toml").exists());
+
+    // Verify worktree created as sibling with prefix
+    let wt_path = project_dir.join("mp_main");
+    assert!(wt_path.exists());
 }
 
 #[test]
-fn init_with_custom_name() {
+fn init_with_empty_prefix() {
     let tmp = TempDir::new().unwrap();
 
     let source = tmp.path().join("source");
@@ -58,12 +73,22 @@ fn init_with_custom_name() {
 
     AssertCommand::cargo_bin("grov")
         .unwrap()
-        .args(["init", source.to_str().unwrap(), "--name", "myproject"])
+        .args([
+            "init",
+            "--url",
+            source.to_str().unwrap(),
+            "--name",
+            "myproject",
+            "--prefix",
+            "",
+        ])
         .current_dir(&work_dir)
         .assert()
         .success();
 
-    assert!(work_dir.join("myproject.git").exists());
+    // Worktree should be just the branch name (no prefix)
+    let project_dir = work_dir.join("myproject");
+    assert!(project_dir.join("main").exists());
 }
 
 fn run(dir: &std::path::Path, args: &[&str]) {

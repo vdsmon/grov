@@ -23,9 +23,21 @@ pub fn sanitize_branch_name(branch: &str) -> String {
     result
 }
 
-/// Build the worktree directory path: `<bare_repo>/trees/<sanitized_branch>`
-pub fn worktree_dir(bare_repo: &Path, branch: &str) -> PathBuf {
-    bare_repo.join("trees").join(sanitize_branch_name(branch))
+/// Build the worktree directory path as a sibling of the bare repo.
+///
+/// - If prefix is empty: `<bare_repo>/../<sanitized_branch>`
+/// - If prefix is set:   `<bare_repo>/../<prefix>_<sanitized_branch>`
+pub fn worktree_dir(bare_repo: &Path, branch: &str, prefix: &str) -> PathBuf {
+    let parent = bare_repo
+        .parent()
+        .expect("bare repo must have a parent dir");
+    let sanitized = sanitize_branch_name(branch);
+    let dir_name = if prefix.is_empty() {
+        sanitized
+    } else {
+        format!("{prefix}_{sanitized}")
+    };
+    parent.join(dir_name)
 }
 
 /// Extract the repository name from a URL, stripping `.git` suffix.
@@ -64,11 +76,20 @@ mod tests {
     }
 
     #[test]
-    fn worktree_dir_path() {
-        let bare = Path::new("/repos/myproject.git");
+    fn worktree_dir_with_prefix() {
+        let bare = Path::new("/repos/myproject/repo.git");
         assert_eq!(
-            worktree_dir(bare, "feature/login"),
-            PathBuf::from("/repos/myproject.git/trees/feature-login")
+            worktree_dir(bare, "feature/login", "mp"),
+            PathBuf::from("/repos/myproject/mp_feature-login")
+        );
+    }
+
+    #[test]
+    fn worktree_dir_without_prefix() {
+        let bare = Path::new("/repos/myproject/repo.git");
+        assert_eq!(
+            worktree_dir(bare, "feature/login", ""),
+            PathBuf::from("/repos/myproject/feature-login")
         );
     }
 

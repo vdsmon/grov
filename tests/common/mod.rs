@@ -5,8 +5,16 @@ use std::process::Command;
 
 use tempfile::TempDir;
 
-/// Create a temporary bare repository with an initial commit and a default branch.
-pub fn create_bare_repo() -> (TempDir, PathBuf) {
+/// Create a temporary project with a bare repo at `tmp/project/repo.git`,
+/// a `.grov.toml` with prefix "test", and the source repo for cloning.
+///
+/// Returns (TempDir, bare_repo_path, project_dir).
+pub fn create_bare_repo() -> (TempDir, PathBuf, PathBuf) {
+    create_bare_repo_with_prefix("test")
+}
+
+/// Create a temporary project with a configurable prefix.
+pub fn create_bare_repo_with_prefix(prefix: &str) -> (TempDir, PathBuf, PathBuf) {
     let tmp = TempDir::new().expect("failed to create temp dir");
 
     // Create a normal repo first, make a commit, then clone it bare
@@ -23,8 +31,12 @@ pub fn create_bare_repo() -> (TempDir, PathBuf) {
     run(&source, &["git", "add", "."]);
     run(&source, &["git", "commit", "-m", "initial"]);
 
-    // Clone as bare
-    let bare = tmp.path().join("repo.git");
+    // Create project directory
+    let project_dir = tmp.path().join("project");
+    std::fs::create_dir_all(&project_dir).unwrap();
+
+    // Clone as bare into project/repo.git
+    let bare = project_dir.join("repo.git");
     run(
         tmp.path(),
         &[
@@ -58,7 +70,11 @@ pub fn create_bare_repo() -> (TempDir, PathBuf) {
         ],
     );
 
-    (tmp, bare)
+    // Write .grov.toml
+    let config_content = format!("[worktree]\nprefix = \"{prefix}\"\n");
+    std::fs::write(bare.join(".grov.toml"), config_content).unwrap();
+
+    (tmp, bare, project_dir)
 }
 
 fn run(dir: &Path, args: &[&str]) {

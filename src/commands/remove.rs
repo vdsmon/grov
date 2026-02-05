@@ -26,11 +26,9 @@ pub fn execute(name: &str, do_delete_branch: bool, force: bool) -> anyhow::Resul
 
     println!("Removed worktree at {}", wt_path.display());
 
-    if do_delete_branch {
-        if let Some(ref branch) = branch_name {
-            delete_branch(&repo, branch)?;
-            println!("Deleted branch {branch}");
-        }
+    if do_delete_branch && let Some(ref branch) = branch_name {
+        delete_branch(&repo, branch)?;
+        println!("Deleted branch {branch}");
     }
 
     Ok(())

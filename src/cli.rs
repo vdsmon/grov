@@ -15,12 +15,17 @@ pub struct Cli {
 pub enum Commands {
     /// Clone a repo as bare and create an initial worktree
     Init {
-        /// Repository URL to clone
-        url: String,
+        /// Repository URL to clone (prompted if not provided)
+        #[arg(long)]
+        url: Option<String>,
 
-        /// Directory name for the bare repo (defaults to <repo-name>.git)
+        /// Project directory name (defaults to repo name from URL)
         #[arg(long)]
         name: Option<String>,
+
+        /// Worktree prefix (e.g. "dp" creates dp_main, dp_feature-x)
+        #[arg(long)]
+        prefix: Option<String>,
 
         /// Parent directory to clone into (defaults to current directory)
         #[arg(long)]

@@ -6,14 +6,11 @@ use assert_cmd::Command;
 use predicates::prelude::*;
 
 #[test]
-fn list_in_bare_repo() {
-    let (_tmp, bare) = common::create_bare_repo();
+fn list_in_worktree() {
+    let (_tmp, bare, project_dir) = common::create_bare_repo();
 
-    // Create a worktree first
-    let trees_dir = bare.join("trees");
-    std::fs::create_dir_all(&trees_dir).unwrap();
-
-    let wt_path = trees_dir.join("main");
+    // Create a worktree as sibling
+    let wt_path = project_dir.join("test_main");
     let output = std::process::Command::new("git")
         .env("GIT_DIR", &bare)
         .args(["worktree", "add", wt_path.to_str().unwrap(), "main"])
@@ -32,12 +29,9 @@ fn list_in_bare_repo() {
 
 #[test]
 fn list_compact() {
-    let (_tmp, bare) = common::create_bare_repo();
+    let (_tmp, bare, project_dir) = common::create_bare_repo();
 
-    let trees_dir = bare.join("trees");
-    std::fs::create_dir_all(&trees_dir).unwrap();
-
-    let wt_path = trees_dir.join("main");
+    let wt_path = project_dir.join("test_main");
     let output = std::process::Command::new("git")
         .env("GIT_DIR", &bare)
         .args(["worktree", "add", wt_path.to_str().unwrap(), "main"])
