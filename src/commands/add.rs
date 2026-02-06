@@ -1,5 +1,7 @@
 use std::path::Path;
 
+use console::style;
+
 use crate::config::read_config;
 use crate::git::executor::run_git_ok;
 use crate::git::repo::{default_branch, find_bare_repo};
@@ -48,8 +50,10 @@ pub fn execute(branch: &str, base: Option<&str>, custom_path: Option<&Path>) -> 
     }
 
     println!(
-        "Created worktree at {} on branch {branch}",
-        wt_path.display()
+        "{} Created worktree at {} on branch {}",
+        style("✓").green().bold(),
+        style(wt_path.display()).bold(),
+        style(branch).cyan().bold(),
     );
     Ok(())
 }
