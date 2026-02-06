@@ -1,3 +1,5 @@
+use console::style;
+
 use crate::git::repo::find_bare_repo;
 use crate::git::status::is_dirty;
 use crate::git::worktree::{delete_branch, find_worktree, list_worktrees, remove_worktree};
@@ -24,11 +26,19 @@ pub fn execute(name: &str, do_delete_branch: bool, force: bool) -> anyhow::Resul
 
     remove_worktree(&repo, &wt_path, force)?;
 
-    println!("Removed worktree at {}", wt_path.display());
+    println!(
+        "{} Removed worktree at {}",
+        style("✓").green().bold(),
+        style(wt_path.display()).bold(),
+    );
 
     if do_delete_branch && let Some(ref branch) = branch_name {
         delete_branch(&repo, branch)?;
-        println!("Deleted branch {branch}");
+        println!(
+            "{} Deleted branch {}",
+            style("✓").green().bold(),
+            style(branch).cyan().bold(),
+        );
     }
 
     Ok(())

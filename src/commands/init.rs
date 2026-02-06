@@ -1,11 +1,29 @@
 use std::io::{self, BufRead, Write};
 use std::path::Path;
 
+use console::style;
+
 use crate::config::{GrovConfig, WorktreeConfig, write_config};
 use crate::git::executor::run_git_ok;
 use crate::git::repo::default_branch;
 use crate::git::worktree::add_worktree;
 use crate::paths::{repo_name_from_url, worktree_dir};
+
+fn prompt(label: &str, default: Option<&str>, reader: &mut impl BufRead) -> io::Result<String> {
+    let prompt_marker = style("?").cyan().bold();
+    let label_styled = style(label).bold();
+    match default {
+        Some(d) => eprint!(
+            "{prompt_marker} {label_styled} {}: ",
+            style(format!("[{d}]")).dim()
+        ),
+        None => eprint!("{prompt_marker} {label_styled}: "),
+    }
+    io::stderr().flush()?;
+    let mut line = String::new();
+    reader.read_line(&mut line)?;
+    Ok(line.trim().to_string())
+}
 
 pub fn execute(
     url: Option<&str>,
@@ -20,11 +38,7 @@ pub fn execute(
     let url = match url {
         Some(u) => u.to_string(),
         None => {
-            eprint!("Repository URL: ");
-            io::stderr().flush()?;
-            let mut line = String::new();
-            reader.read_line(&mut line)?;
-            let line = line.trim().to_string();
+            let line = prompt("Repository URL", None, &mut reader)?;
             if line.is_empty() {
                 anyhow::bail!("URL is required");
             }
@@ -37,11 +51,7 @@ pub fn execute(
     let project_name = match name {
         Some(n) => n.to_string(),
         None => {
-            eprint!("Project name [{}]: ", derived_name);
-            io::stderr().flush()?;
-            let mut line = String::new();
-            reader.read_line(&mut line)?;
-            let line = line.trim().to_string();
+            let line = prompt("Project name", Some(&derived_name), &mut reader)?;
             if line.is_empty() { derived_name } else { line }
         }
     };
@@ -49,13 +59,11 @@ pub fn execute(
     // 3. Prefix — use flag or prompt
     let prefix = match prefix {
         Some(p) => p.to_string(),
-        None => {
-            eprint!("Worktree prefix (e.g. short alias, blank for none) []: ");
-            io::stderr().flush()?;
-            let mut line = String::new();
-            reader.read_line(&mut line)?;
-            line.trim().to_string()
-        }
+        None => prompt(
+            "Worktree prefix (e.g. short alias, blank for none)",
+            Some(""),
+            &mut reader,
+        )?,
     };
 
     let parent = match path {
@@ -107,6 +115,11 @@ pub fn execute(
         .file_name()
         .map(|n| n.to_string_lossy().to_string())
         .unwrap_or_default();
-    println!("Initialized {project_name}/ with worktree {wt_dir_name}");
+    println!(
+        "\n{} Initialized {}/ with worktree {}",
+        style("✓").green().bold(),
+        style(&project_name).bold(),
+        style(&wt_dir_name).cyan().bold(),
+    );
     Ok(())
 }

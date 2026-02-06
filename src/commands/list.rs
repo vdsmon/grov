@@ -24,41 +24,65 @@ pub fn execute(compact: bool) -> anyhow::Result<()> {
         return Ok(());
     }
 
-    // Find max branch name length for alignment
-    let max_len = worktrees
+    // Collect non-bare worktrees with their computed state
+    let entries: Vec<_> = worktrees
         .iter()
         .filter(|wt| !wt.is_bare)
-        .filter_map(|wt| wt.branch.as_ref())
-        .map(|b| b.len())
-        .max()
-        .unwrap_or(0);
+        .map(|wt| {
+            let branch_name = wt.branch.as_deref().unwrap_or("(detached)");
+            let is_current = cwd_canonical
+                .as_ref()
+                .and_then(|cwd| std::fs::canonicalize(&wt.path).ok().map(|p| p == *cwd))
+                .unwrap_or(false);
+            let dirty = status::is_dirty(&wt.path).unwrap_or(false);
+            let ab = status::ahead_behind(&wt.path).unwrap_or(None);
+            let dir_name = wt
+                .path
+                .file_name()
+                .map(|n| n.to_string_lossy().to_string())
+                .unwrap_or_default();
+            (branch_name, is_current, dirty, ab, dir_name)
+        })
+        .collect();
 
-    for wt in &worktrees {
-        if wt.is_bare {
-            continue;
-        }
+    if entries.is_empty() {
+        println!("{}", style("No worktrees found.").dim());
+        return Ok(());
+    }
 
-        let branch_name = wt.branch.as_deref().unwrap_or("(detached)");
-        let is_current = cwd_canonical
-            .as_ref()
-            .and_then(|cwd| std::fs::canonicalize(&wt.path).ok().map(|p| p == *cwd))
-            .unwrap_or(false);
+    // Find max branch name length for alignment
+    let max_branch = entries.iter().map(|(b, ..)| b.len()).max().unwrap_or(0);
 
-        let marker = if is_current { "*" } else { " " };
-
-        // Status info
-        let dirty = status::is_dirty(&wt.path).unwrap_or(false);
-        let ab = status::ahead_behind(&wt.path).unwrap_or(None);
-
-        let status_str = if dirty {
-            style("[dirty]").yellow().to_string()
+    for (branch_name, is_current, dirty, ab, dir_name) in &entries {
+        // Marker + branch
+        let (marker, branch_display) = if *is_current {
+            (
+                style("●").cyan().bold().to_string(),
+                style(branch_name).cyan().bold().to_string(),
+            )
         } else {
-            style("[clean]").green().to_string()
+            (style("○").dim().to_string(), style(branch_name).to_string())
         };
 
-        let ab_str = format_ahead_behind(ab);
+        // Status indicator
+        let status_str = if *dirty {
+            style("✦ dirty").yellow().to_string()
+        } else {
+            style("✓ clean").green().to_string()
+        };
 
-        println!("{marker} {branch_name:<max_len$}  {status_str}{ab_str}",);
+        // Ahead/behind
+        let ab_str = format_ahead_behind(*ab);
+
+        // Directory name in dim
+        let path_str = style(format!("({dir_name})")).dim().to_string();
+
+        let padded_branch = format!(
+            "{branch_display}{}",
+            " ".repeat(max_branch.saturating_sub(branch_name.len()))
+        );
+
+        println!("  {marker} {padded_branch}  {status_str}{ab_str}  {path_str}",);
     }
 
     Ok(())
@@ -69,15 +93,15 @@ fn format_ahead_behind(ab: Option<(u32, u32)>) -> String {
         Some((ahead, behind)) => {
             let mut parts = Vec::new();
             if ahead > 0 {
-                parts.push(format!("↑{ahead}"));
+                parts.push(style(format!("↑{ahead}")).green().to_string());
             }
             if behind > 0 {
-                parts.push(format!("↓{behind}"));
+                parts.push(style(format!("↓{behind}")).red().to_string());
             }
             if parts.is_empty() {
                 String::new()
             } else {
-                format!(" {}", style(format!("[{}]", parts.join(" "))).dim())
+                format!("  {}", parts.join(" "))
             }
         }
         None => String::new(),
