@@ -1,0 +1,30 @@
+{
+  "enabledPlugins": {
+    "github@claude-plugins-official": true
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "FILE=$(jq -r '.tool_input.file_path' < /dev/stdin); if [[ \"$FILE\" == *.rs ]]; then export PATH=\"$HOME/.cargo/bin:$PATH\" && cargo fmt --quiet 2>/dev/null || true; fi",
+            "statusMessage": "Formatting Rust code"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "FILE=$(jq -r '.tool_input.file_path' < /dev/stdin); if [[ \"$FILE\" == *Cargo.lock ]] || [[ \"$FILE\" == */target/* ]]; then echo 'Do not edit Cargo.lock or target/ files' >&2; exit 2; fi"
+          }
+        ]
+      }
+    ]
+  }
+}

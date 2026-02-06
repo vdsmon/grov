@@ -13,6 +13,4 @@ Thumbs.db
 *~
 
 # Claude
-.claude/
-.github/workflows/CLAUDE.md
-src/CLAUDE.md
+.claude/settings.local.json
