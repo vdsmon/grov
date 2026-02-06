@@ -76,14 +76,19 @@ pub fn find_bare_repo(start: &Path) -> Result<PathBuf> {
     Err(GrovError::BareRepoNotFound(start))
 }
 
-/// Get the default branch by parsing `refs/remotes/origin/HEAD`.
+/// Get the default branch by parsing `refs/remotes/origin/HEAD`,
+/// falling back to the bare repo's own HEAD if the remote ref isn't set
+/// (common with local clones).
 pub fn default_branch(repo: &Path) -> Result<String> {
-    let output = run_git_ok(Some(repo), &["symbolic-ref", "refs/remotes/origin/HEAD"])?;
+    if let Ok(output) = run_git_ok(Some(repo), &["symbolic-ref", "refs/remotes/origin/HEAD"]) {
+        let branch = output
+            .strip_prefix("refs/remotes/origin/")
+            .unwrap_or(&output);
+        return Ok(branch.to_string());
+    }
 
-    // Output is like "refs/remotes/origin/main"
-    let branch = output
-        .strip_prefix("refs/remotes/origin/")
-        .unwrap_or(&output);
-
+    // Fall back to the bare repo's own HEAD
+    let output = run_git_ok(Some(repo), &["symbolic-ref", "HEAD"])?;
+    let branch = output.strip_prefix("refs/heads/").unwrap_or(&output);
     Ok(branch.to_string())
 }

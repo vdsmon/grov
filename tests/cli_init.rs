@@ -16,6 +16,7 @@ fn init_creates_project_with_bare_repo_and_worktree() {
     run(&source, &["git", "init", "-b", "main"]);
     run(&source, &["git", "config", "user.email", "test@test.com"]);
     run(&source, &["git", "config", "user.name", "Test"]);
+    run(&source, &["git", "config", "commit.gpgsign", "false"]);
     std::fs::write(source.join("README.md"), "# test\n").unwrap();
     run(&source, &["git", "add", "."]);
     run(&source, &["git", "commit", "-m", "initial"]);
@@ -64,6 +65,7 @@ fn init_with_empty_prefix() {
     run(&source, &["git", "init", "-b", "main"]);
     run(&source, &["git", "config", "user.email", "test@test.com"]);
     run(&source, &["git", "config", "user.name", "Test"]);
+    run(&source, &["git", "config", "commit.gpgsign", "false"]);
     std::fs::write(source.join("README.md"), "# test\n").unwrap();
     run(&source, &["git", "add", "."]);
     run(&source, &["git", "commit", "-m", "initial"]);

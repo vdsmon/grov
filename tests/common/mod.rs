@@ -24,6 +24,7 @@ pub fn create_bare_repo_with_prefix(prefix: &str) -> (TempDir, PathBuf, PathBuf)
     run(&source, &["git", "init", "-b", "main"]);
     run(&source, &["git", "config", "user.email", "test@test.com"]);
     run(&source, &["git", "config", "user.name", "Test"]);
+    run(&source, &["git", "config", "commit.gpgsign", "false"]);
 
     // Create initial commit
     let file = source.join("README.md");

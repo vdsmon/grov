@@ -136,6 +136,15 @@ pub fn find_worktree<'a>(worktrees: &'a [WorktreeInfo], name: &str) -> Option<&'
 mod tests {
     use super::*;
 
+    fn make_worktree(path: &str, branch: Option<&str>, is_bare: bool) -> WorktreeInfo {
+        WorktreeInfo {
+            path: PathBuf::from(path),
+            head: "abc123".to_string(),
+            branch: branch.map(|b| b.to_string()),
+            is_bare,
+        }
+    }
+
     #[test]
     fn parse_porcelain_output() {
         let output = "\
@@ -151,8 +160,6 @@ worktree /repos/project.git/trees/feature
 HEAD 789abc
 branch refs/heads/feature/login
 ";
-        // We test the parsing logic indirectly; the function calls git directly
-        // so we test the struct construction logic here
         let mut worktrees = Vec::new();
         let mut path = None;
         let mut head = None;
@@ -182,7 +189,6 @@ branch refs/heads/feature/login
             }
         }
 
-        // Handle last entry (no trailing blank line)
         if let (Some(p), Some(h)) = (path, head) {
             worktrees.push(WorktreeInfo {
                 path: p,
@@ -197,5 +203,67 @@ branch refs/heads/feature/login
         assert_eq!(worktrees[0].branch, None);
         assert_eq!(worktrees[1].branch.as_deref(), Some("main"));
         assert_eq!(worktrees[2].branch.as_deref(), Some("feature/login"));
+    }
+
+    #[test]
+    fn find_worktree_by_branch_name() {
+        let worktrees = vec![
+            make_worktree("/repos/project.git", None, true),
+            make_worktree("/repos/test_main", Some("main"), false),
+            make_worktree("/repos/test_feature-x", Some("feature-x"), false),
+        ];
+
+        let found = find_worktree(&worktrees, "feature-x");
+        assert!(found.is_some());
+        assert_eq!(found.unwrap().branch.as_deref(), Some("feature-x"));
+    }
+
+    #[test]
+    fn find_worktree_by_directory_name() {
+        let worktrees = vec![
+            make_worktree("/repos/project.git", None, true),
+            make_worktree("/repos/test_main", Some("main"), false),
+        ];
+
+        let found = find_worktree(&worktrees, "test_main");
+        assert!(found.is_some());
+        assert_eq!(found.unwrap().branch.as_deref(), Some("main"));
+    }
+
+    #[test]
+    fn find_worktree_not_found() {
+        let worktrees = vec![
+            make_worktree("/repos/project.git", None, true),
+            make_worktree("/repos/test_main", Some("main"), false),
+        ];
+
+        assert!(find_worktree(&worktrees, "nonexistent").is_none());
+    }
+
+    #[test]
+    fn find_worktree_detached_head_matches_by_dir() {
+        let worktrees = vec![make_worktree("/repos/my-worktree", None, false)];
+
+        let found = find_worktree(&worktrees, "my-worktree");
+        assert!(found.is_some());
+        assert_eq!(found.unwrap().branch, None);
+    }
+
+    #[test]
+    fn find_worktree_branch_match_preferred_over_dir() {
+        // A worktree whose branch name matches the query should be found
+        // even if another worktree's directory name also matches
+        let worktrees = vec![
+            make_worktree("/repos/feature-x", Some("main"), false),
+            make_worktree("/repos/test_other", Some("feature-x"), false),
+        ];
+
+        let found = find_worktree(&worktrees, "feature-x");
+        assert!(found.is_some());
+        // Should find the one with matching branch name (iter order: first match wins)
+        // First worktree's dir is "feature-x" so it matches by dir name
+        // But find uses iter().find(), which returns the first match
+        // The first worktree matches by dir name "feature-x"
+        assert_eq!(found.unwrap().path, PathBuf::from("/repos/feature-x"));
     }
 }

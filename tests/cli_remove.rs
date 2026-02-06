@@ -158,3 +158,63 @@ fn remove_with_delete_branch() {
         .success()
         .stdout(predicate::str::contains("Deleted branch"));
 }
+
+#[test]
+fn remove_nonexistent_worktree_fails() {
+    let (_tmp, bare, project_dir) = common::create_bare_repo();
+
+    let main_wt = project_dir.join("test_main");
+    let output = std::process::Command::new("git")
+        .env("GIT_DIR", &bare)
+        .args(["worktree", "add", main_wt.to_str().unwrap(), "main"])
+        .output()
+        .unwrap();
+    assert!(output.status.success());
+
+    Command::cargo_bin("grov")
+        .unwrap()
+        .args(["remove", "does-not-exist"])
+        .current_dir(&main_wt)
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("worktree not found"));
+}
+
+#[test]
+fn remove_by_directory_name() {
+    let (_tmp, bare, project_dir) = common::create_bare_repo();
+
+    let main_wt = project_dir.join("test_main");
+    let output = std::process::Command::new("git")
+        .env("GIT_DIR", &bare)
+        .args(["worktree", "add", main_wt.to_str().unwrap(), "main"])
+        .output()
+        .unwrap();
+    assert!(output.status.success());
+
+    let wt = project_dir.join("test_dir-remove");
+    let output = std::process::Command::new("git")
+        .env("GIT_DIR", &bare)
+        .args([
+            "worktree",
+            "add",
+            "-b",
+            "dir-remove",
+            wt.to_str().unwrap(),
+            "main",
+        ])
+        .output()
+        .unwrap();
+    assert!(output.status.success());
+
+    // Remove by directory name instead of branch name
+    Command::cargo_bin("grov")
+        .unwrap()
+        .args(["remove", "test_dir-remove"])
+        .current_dir(&main_wt)
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Removed worktree"));
+
+    assert!(!wt.exists());
+}

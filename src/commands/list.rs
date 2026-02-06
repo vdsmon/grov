@@ -83,3 +83,39 @@ fn format_ahead_behind(ab: Option<(u32, u32)>) -> String {
         None => String::new(),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn format_ahead_behind_none() {
+        assert_eq!(format_ahead_behind(None), "");
+    }
+
+    #[test]
+    fn format_ahead_behind_zero_zero() {
+        assert_eq!(format_ahead_behind(Some((0, 0))), "");
+    }
+
+    #[test]
+    fn format_ahead_behind_ahead_only() {
+        let result = format_ahead_behind(Some((3, 0)));
+        assert!(result.contains("↑3"));
+        assert!(!result.contains("↓"));
+    }
+
+    #[test]
+    fn format_ahead_behind_behind_only() {
+        let result = format_ahead_behind(Some((0, 2)));
+        assert!(result.contains("↓2"));
+        assert!(!result.contains("↑"));
+    }
+
+    #[test]
+    fn format_ahead_behind_both() {
+        let result = format_ahead_behind(Some((1, 4)));
+        assert!(result.contains("↑1"));
+        assert!(result.contains("↓4"));
+    }
+}
