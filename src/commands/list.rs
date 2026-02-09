@@ -4,6 +4,13 @@ use crate::git::repo::find_bare_repo;
 use crate::git::status;
 use crate::git::worktree::list_worktrees;
 
+enum WorktreeStatus {
+    Clean,
+    Dirty,
+    Missing,
+    Unknown,
+}
+
 pub fn execute(compact: bool) -> anyhow::Result<()> {
     let cwd = std::env::current_dir()?;
     let repo = find_bare_repo(&cwd)?;
@@ -29,19 +36,37 @@ pub fn execute(compact: bool) -> anyhow::Result<()> {
         .iter()
         .filter(|wt| !wt.is_bare)
         .map(|wt| {
-            let branch_name = wt.branch.as_deref().unwrap_or("(detached)");
+            let branch_name = wt
+                .branch
+                .clone()
+                .unwrap_or_else(|| "(detached)".to_string());
+            let wt_canonical = std::fs::canonicalize(&wt.path).ok();
             let is_current = cwd_canonical
                 .as_ref()
-                .and_then(|cwd| std::fs::canonicalize(&wt.path).ok().map(|p| p == *cwd))
+                .zip(wt_canonical.as_ref())
+                .map(|(cwd, root)| cwd == root || cwd.starts_with(root))
                 .unwrap_or(false);
-            let dirty = status::is_dirty(&wt.path).unwrap_or(false);
-            let ab = status::ahead_behind(&wt.path).unwrap_or(None);
+            let status = if !wt.path.exists() {
+                WorktreeStatus::Missing
+            } else {
+                match status::is_dirty(&wt.path) {
+                    Ok(true) => WorktreeStatus::Dirty,
+                    Ok(false) => WorktreeStatus::Clean,
+                    Err(_) => WorktreeStatus::Unknown,
+                }
+            };
+            let ab = match status {
+                WorktreeStatus::Clean | WorktreeStatus::Dirty => {
+                    status::ahead_behind(&wt.path).unwrap_or(None)
+                }
+                WorktreeStatus::Missing | WorktreeStatus::Unknown => None,
+            };
             let dir_name = wt
                 .path
                 .file_name()
                 .map(|n| n.to_string_lossy().to_string())
                 .unwrap_or_default();
-            (branch_name, is_current, dirty, ab, dir_name)
+            (branch_name, is_current, status, ab, dir_name)
         })
         .collect();
 
@@ -53,7 +78,7 @@ pub fn execute(compact: bool) -> anyhow::Result<()> {
     // Find max branch name length for alignment
     let max_branch = entries.iter().map(|(b, ..)| b.len()).max().unwrap_or(0);
 
-    for (branch_name, is_current, dirty, ab, dir_name) in &entries {
+    for (branch_name, is_current, status, ab, dir_name) in &entries {
         // Marker + branch
         let (marker, branch_display) = if *is_current {
             (
@@ -65,10 +90,11 @@ pub fn execute(compact: bool) -> anyhow::Result<()> {
         };
 
         // Status indicator
-        let status_str = if *dirty {
-            style("✦ dirty").yellow().to_string()
-        } else {
-            style("✓ clean").green().to_string()
+        let status_str = match status {
+            WorktreeStatus::Clean => style("✓ clean").green().to_string(),
+            WorktreeStatus::Dirty => style("✦ dirty").yellow().to_string(),
+            WorktreeStatus::Missing => style("! missing").red().to_string(),
+            WorktreeStatus::Unknown => style("? unknown").yellow().to_string(),
         };
 
         // Ahead/behind

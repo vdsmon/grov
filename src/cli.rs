@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use clap::{Parser, Subcommand};
+use clap::{Parser, Subcommand, ValueEnum};
 use clap_complete::Shell;
 
 /// An opinionated bare-repo-only git worktree manager
@@ -60,6 +60,10 @@ pub enum Commands {
         /// Worktree name or branch to remove
         name: String,
 
+        /// How to interpret the name when resolving a worktree
+        #[arg(long = "match", value_enum, default_value_t = RemoveMatchMode::Auto)]
+        match_mode: RemoveMatchMode,
+
         /// Also delete the local branch
         #[arg(long)]
         delete_branch: bool,
@@ -74,4 +78,14 @@ pub enum Commands {
         /// Shell to generate completions for
         shell: Shell,
     },
+}
+
+#[derive(Copy, Clone, Debug, Eq, PartialEq, ValueEnum)]
+pub enum RemoveMatchMode {
+    /// Match by branch or directory name, and fail on ambiguity
+    Auto,
+    /// Match only by branch name
+    Branch,
+    /// Match only by worktree directory name
+    Dir,
 }

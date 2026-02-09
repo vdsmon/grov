@@ -60,13 +60,20 @@ Lists all worktrees with status information.
 
 ```sh
 grov list
-# * main        [clean] [↑2]
-#   feature-x   [dirty] [↑1 ↓3]
+# ● main        ✓ clean    ↑2
+# ○ feature-x   ✦ dirty    ↑1 ↓3
+# ○ stale-wt    ! missing
 
 grov list --compact
 # main
 # feature-x
 ```
+
+Status tokens:
+- `✓ clean` — no local changes
+- `✦ dirty` — uncommitted changes present
+- `! missing` — worktree path no longer exists on disk
+- `? unknown` — worktree status could not be determined
 
 ### `grov remove <name>` (alias: `rm`)
 
@@ -75,7 +82,13 @@ Removes a worktree. Refuses to remove dirty worktrees unless `--force` is used.
 ```sh
 grov remove feature-x
 grov remove feature-x --force --delete-branch
+grov remove feature-x --match branch
 ```
+
+When `<name>` could refer to multiple worktrees (for example branch match and directory-name match),
+`grov remove` exits with an ambiguity error and asks you to rerun with one of:
+- `--match branch`
+- `--match dir`
 
 ### `grov completions <shell>`
 
