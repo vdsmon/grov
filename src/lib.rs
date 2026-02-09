@@ -37,10 +37,12 @@ pub fn run() -> anyhow::Result<()> {
         }
         Commands::Remove {
             name,
+            match_mode,
             delete_branch,
             force,
         } => {
-            commands::remove::execute(&name, delete_branch, force).context("remove failed")?;
+            commands::remove::execute(&name, match_mode, delete_branch, force)
+                .context("remove failed")?;
         }
         Commands::Completions { shell } => {
             commands::completions::execute(shell);

@@ -14,7 +14,12 @@ pub fn execute(branch: &str, base: Option<&str>, custom_path: Option<&Path>) -> 
     let config = read_config(&repo);
 
     // Fetch latest
-    let _ = run_git_ok(Some(&repo), &["fetch", "origin"]);
+    if let Err(err) = run_git_ok(Some(&repo), &["fetch", "origin"]) {
+        eprintln!(
+            "{} could not fetch from origin: {err:#}; continuing with local refs",
+            style("warning:").yellow().bold()
+        );
+    }
 
     // Determine worktree path
     let wt_path = match custom_path {

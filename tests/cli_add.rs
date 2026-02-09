@@ -60,3 +60,42 @@ fn add_existing_local_branch() {
 
     assert!(project_dir.join("test_feature-x").exists());
 }
+
+#[test]
+fn add_warns_when_fetch_fails_but_continues() {
+    let (_tmp, bare, project_dir) = common::create_bare_repo();
+
+    let main_wt = project_dir.join("test_main");
+    let output = std::process::Command::new("git")
+        .env("GIT_DIR", &bare)
+        .args(["worktree", "add", main_wt.to_str().unwrap(), "main"])
+        .output()
+        .unwrap();
+    assert!(output.status.success());
+
+    let output = std::process::Command::new("git")
+        .env("GIT_DIR", &bare)
+        .args(["branch", "local-only", "main"])
+        .output()
+        .unwrap();
+    assert!(output.status.success());
+
+    let output = std::process::Command::new("git")
+        .env("GIT_DIR", &bare)
+        .args(["remote", "set-url", "origin", "/definitely/does/not/exist"])
+        .output()
+        .unwrap();
+    assert!(output.status.success());
+
+    Command::cargo_bin("grov")
+        .unwrap()
+        .args(["add", "local-only"])
+        .current_dir(&main_wt)
+        .assert()
+        .success()
+        .stderr(predicate::str::contains(
+            "warning: could not fetch from origin",
+        ));
+
+    assert!(project_dir.join("test_local-only").exists());
+}
