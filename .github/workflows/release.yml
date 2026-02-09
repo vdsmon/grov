@@ -32,6 +32,7 @@ jobs:
     name: Publish to crates.io
     needs: preflight
     runs-on: ubuntu-latest
+    environment: release
     permissions:
       contents: read
     steps:
