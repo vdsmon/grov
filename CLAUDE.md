@@ -2,63 +2,128 @@
 
 </claude-mem-context>
 
-# grov
+# grov - Claude Project Notes
 
-Opinionated bare-repo-only git worktree manager (Rust CLI).
+Rust CLI for managing Git worktrees around a bare repo layout.
 
-## Build & Test
+## Project Snapshot
 
-- `cargo build` - build debug binary
-- `cargo test` - run all tests (unit + integration)
-- `cargo fmt --check && cargo clippy --all-targets -- -D warnings && cargo test` - full CI check
+- Package: `grov` (`edition = "2024"`, `rust-version = "1.93"`)
+- Primary use case: initialize and operate a sibling worktree layout rooted at `<project>/repo.git`
+- License: MIT OR Apache-2.0
 
-## Architecture
+## Core CLI Behavior
 
-- `src/main.rs` → error formatting with red `error:` prefix, calls `grov::run()`
-- `src/lib.rs` → CLI parsing + command dispatch
-- `src/cli.rs` → clap derive structs (Cli, Commands enum)
-- `src/config.rs` → `GrovConfig` read/write for `.grov.toml` inside bare repo
-- `src/commands/{init,add,list,remove,completions}.rs` → command implementations
-- `src/git/executor.rs` → `run_git()` / `run_git_ok()` — single point for all git calls
-- `src/git/repo.rs` → bare repo discovery (`find_bare_repo`), default branch detection
-- `src/git/worktree.rs` → worktree CRUD, branch checks, porcelain parsing
-- `src/git/status.rs` → dirty check, ahead/behind counts
-- `src/paths.rs` → branch name sanitization, worktree dir paths, URL parsing
-- `src/errors.rs` → `GrovError` thiserror enum
+- `grov init`
+  - clones a bare repo into `<project>/repo.git`
+  - writes `repo.git/.grov.toml`
+  - creates initial worktree for default branch
+  - supports interactive prompts if flags are omitted
+
+- `grov add <branch>`
+  - resolution order:
+    1. existing local branch
+    2. existing remote branch (`origin/<branch>`) with tracking
+    3. new branch from `--base` or detected default branch
+  - attempts `git fetch origin` first
+  - fetch failures are warnings (non-fatal); command continues with local refs
+
+- `grov list` (`grov ls`)
+  - full view prints marker, branch, status, ahead/behind, and dir name
+  - compact view prints branch names only
+  - status tokens:
+    - `✓ clean`
+    - `✦ dirty`
+    - `! missing`
+    - `? unknown`
+  - current marker detection works when run from nested subdirectories inside a worktree
+
+- `grov remove <name>` (`grov rm`)
+  - default matching mode `--match auto`
+  - explicit modes:
+    - `--match branch`
+    - `--match dir`
+  - `auto` fails on ambiguity and prints candidate list + rerun hint
+  - dirty worktrees require `--force`
+  - optional `--delete-branch`
+
+- `grov completions <shell>`
+  - generates shell completion scripts via clap
+
+## Development Commands
+
+Use these as the local pre-PR baseline:
+
+```sh
+cargo fmt --check
+cargo clippy --all-targets --all-features -- -D warnings
+cargo test --all-targets --all-features
+```
+
+## Architecture Map
+
+- `src/main.rs`: top-level error formatting and exit code
+- `src/lib.rs`: CLI parse + dispatch
+- `src/cli.rs`: clap commands/flags (`RemoveMatchMode` lives here)
+- `src/config.rs`: `.grov.toml` read/write for bare repo config
+- `src/commands/*.rs`: command handlers (`init`, `add`, `list`, `remove`, `completions`)
+- `src/git/executor.rs`: shared git command wrapper (`run_git`, `run_git_ok`)
+- `src/git/repo.rs`: bare repo discovery + default branch detection
+- `src/git/worktree.rs`: porcelain parsing, worktree CRUD, branch/directory matching helpers
+- `src/git/status.rs`: dirty and ahead/behind status
+- `src/paths.rs`: branch sanitization + worktree naming
+- `src/errors.rs`: domain error enum (`GrovError`)
 
 ## Conventions
 
-- Sibling worktree layout: `<project>/repo.git/` + `<project>/<prefix>_<branch>/`
-- Config in `repo.git/.grov.toml` stores worktree prefix
-- `worktree_dir(bare_repo, branch, prefix)` builds sibling path
-- `find_bare_repo()` checks for `repo.git` child in current/parent dirs
-- Edition 2024, MSRV 1.93, rustfmt edition 2024
-- `run_git()` returns raw GitOutput; `run_git_ok()` errors on non-zero exit
-- `add_worktree()` signature: `(repo, path, commit_ish: Option<&str>, extra_args: &[&str])`
-- Use `GrovError` for domain errors (bad repo, missing branch); `anyhow` for command-level orchestration
-- New commands: add file in `src/commands/`, variant in `Commands` enum in `cli.rs`, dispatch arm in `lib.rs`
+- Sibling layout: `<project>/repo.git/` + `<project>/<prefix>_<branch>/`
+- Config location: `repo.git/.grov.toml`
+- Path helper: `worktree_dir(bare_repo, branch, prefix)`
+- Bare repo discovery: `find_bare_repo()` looks in current context and parent layout
+- Edition/MSRV: Rust 2024 + 1.93
 
-## Init Command
+## Tests
 
-- All flags optional: `--url`, `--name`, `--prefix`, `--path`
-- Missing flags trigger interactive prompts on stderr
-- Creates `<name>/repo.git/` + `<name>/<prefix>_<default-branch>/` in cwd (or `--path`)
+- Unit tests:
+  - `src/paths.rs`
+  - `src/git/worktree.rs`
+- Integration tests:
+  - `tests/cli_init.rs`
+  - `tests/cli_add.rs`
+  - `tests/cli_list.rs`
+  - `tests/cli_remove.rs`
+- Shared harness: `tests/common/mod.rs`
 
-## Releasing
+## Automation and Release
 
-- `cargo release patch|minor|major --no-publish --no-confirm --execute` — bumps version, commits, tags, pushes
-- Release CI triggers on `v*` tags: builds binaries (4 targets), publishes to crates.io, creates GitHub Release
-- Requires `CARGO_REGISTRY_TOKEN` secret in GitHub repo settings for crates.io publishing
+- CI workflow: `.github/workflows/ci.yml`
+  - triggers on `push` to `main` and `pull_request`
+  - required jobs: `fmt`, `clippy`, `test`
+  - uses Rust cache and concurrency cancellation
+
+- Release workflow: `.github/workflows/release.yml`
+  - triggers on tag push `v*`
+  - `preflight` gate (fmt/clippy/test)
+  - `publish` job uses environment `release`
+  - cross-platform builds and artifact packaging
+  - attaches tarballs and `checksums.txt` to GitHub Release
+  - requires `CARGO_REGISTRY_TOKEN` in repo secrets
+
+## Repository Governance (Current)
+
+- `main` branch protection requires:
+  - status checks: `fmt`, `clippy`, `test`
+  - conversation resolution
+  - linear history
+  - no force pushes or deletions
+- CODEOWNERS: `.github/CODEOWNERS`
+- Dependabot config: `.github/dependabot.yml` (weekly Cargo + GitHub Actions updates)
+- PR template: `.github/pull_request_template.md`
+- Issue templates: `.github/ISSUE_TEMPLATE/*`
+- Security policy: `SECURITY.md`
 
 ## Gotchas
 
-- rustfmt edition 2024 reformats aggressively — always run `cargo fmt` before `cargo clippy`
-- `assert_cmd` 2.x deprecated `cargo_bin`; test crate roots need `#![allow(deprecated)]`
-- Edition 2024 enables let-chains — clippy will flag nested `if let` + `if` as `collapsible_if`
-- `cargo-release` requires clean working tree (no untracked files) — gitignore or commit first
-
-## Testing
-
-- Unit tests in `src/paths.rs` and `src/git/worktree.rs`
-- Integration tests in `tests/cli_{init,add,list,remove}.rs` using assert_cmd + tempfile
-- `tests/common/mod.rs` has `create_bare_repo()` helper — returns `(TempDir, bare_path, project_dir)`, uses `#![allow(dead_code)]`
+- `Cargo.lock` is intentionally gitignored, so avoid `--locked` in CI commands.
+- Some automation checks (for example CodeRabbit) may appear on PRs but are not required merge gates.
+- `assert_cmd` 2.x uses deprecated `cargo_bin`; tests currently allow deprecation where needed.
