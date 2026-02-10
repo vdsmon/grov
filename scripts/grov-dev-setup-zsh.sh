@@ -23,6 +23,7 @@ if grep -Fqx "$source_line" "$zshrc"; then
   echo "Already configured in $zshrc"
 else
   tmp_file="$(mktemp)"
+  chmod "$(stat -f '%Lp' "$zshrc")" "$tmp_file"
   awk '!/grov-dev-env\.sh/' "$zshrc" > "$tmp_file"
   printf '\n%s\n' "$source_line" >> "$tmp_file"
   mv "$tmp_file" "$zshrc"
