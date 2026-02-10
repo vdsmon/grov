@@ -43,11 +43,11 @@ Clone repository as bare, write config, and create the initial worktree.
 
 ```sh
 grov init --url https://github.com/user/repo.git --prefix rp
-grov init --url https://github.com/user/repo.git --name myproject --prefix mp
+grov init --url https://github.com/user/repo.git --name myproject --prefix mp --branch develop
 grov init
 ```
 
-If flags are omitted, `init` prompts interactively for URL/name/prefix.
+If flags are omitted, `init` prompts interactively for URL, name, prefix, and branch. The `--branch` flag overrides the auto-detected default branch.
 
 ### `grov add <branch>`
 

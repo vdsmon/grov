@@ -18,12 +18,14 @@ pub fn run() -> anyhow::Result<()> {
             url,
             name,
             prefix,
+            branch,
             path,
         } => {
             commands::init::execute(
                 url.as_deref(),
                 name.as_deref(),
                 prefix.as_deref(),
+                branch.as_deref(),
                 path.as_deref(),
             )
             .context("init failed")?;

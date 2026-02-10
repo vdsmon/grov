@@ -27,6 +27,10 @@ pub enum Commands {
         #[arg(long)]
         prefix: Option<String>,
 
+        /// Initial branch to check out (defaults to detected default branch)
+        #[arg(long)]
+        branch: Option<String>,
+
         /// Parent directory to clone into (defaults to current directory)
         #[arg(long)]
         path: Option<PathBuf>,

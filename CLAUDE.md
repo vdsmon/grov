@@ -19,6 +19,9 @@ Rust CLI for managing Git worktrees around a bare repo layout.
   - writes `repo.git/.grov.toml`
   - creates initial worktree for default branch
   - supports interactive prompts if flags are omitted
+  - flags: `--url`, `--name`, `--prefix`, `--branch`, `--path`
+  - `--branch` overrides auto-detected default branch (falls back to "main" if detection fails)
+  - success output prints both `repo.git` and worktree paths
 
 - `grov add <branch>`
   - resolution order:
@@ -121,6 +124,18 @@ cargo test --all-targets --all-features
 - PR template: `.github/pull_request_template.md`
 - Issue templates: `.github/ISSUE_TEMPLATE/*`
 - Security policy: `SECURITY.md`
+
+## Spec-Driven Development
+
+Feature planning and implementation are decoupled via structured specs in `specs/`.
+
+- **`/spec <description>`** — Research the codebase and write a spec to `specs/NNN-name.md` (status: `draft`)
+- **Review & approve** — Edit the spec, then change status to `approved`
+- **`/implement specs/NNN-name.md [task N]`** — Implement a specific task from an approved spec
+
+Spec template: `specs/TEMPLATE.md`. Each spec includes user story, acceptance criteria, technical design, tasks, and testing requirements. Tasks should be small enough for one agent session.
+
+This workflow supports using different models for planning (e.g., Opus) vs implementation (e.g., Sonnet).
 
 ## Gotchas
 
