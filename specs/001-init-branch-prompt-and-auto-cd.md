@@ -40,7 +40,7 @@ Currently `grov init` auto-detects the default branch via `git symbolic-ref refs
 
 **Print paths**:
 - Update the success message at the end of `init::execute()` to print both the bare repo path and the worktree path on separate lines, e.g.:
-  ```
+  ```text
   ✓ Initialized myproject/
 
     bare repo   myproject/repo.git

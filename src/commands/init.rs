@@ -140,7 +140,7 @@ pub fn execute(
             wt_path
                 .file_name()
                 .map(|n| format!("{}/{}", project_name, n.to_string_lossy()))
-                .unwrap_or_default()
+                .expect("worktree path must have a file name")
         )
         .dim(),
     );
