@@ -153,6 +153,8 @@ cargo clippy --all-targets --all-features -- -D warnings
 cargo test --all-targets --all-features
 ```
 
+For local dev setup with the in-development binary (`grovd`) in an isolated sandbox, see [docs/local-dev.md](docs/local-dev.md) (includes one-command zsh setup).
+
 ## CI and release automation
 
 ### CI (`.github/workflows/ci.yml`)
