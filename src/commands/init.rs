@@ -29,6 +29,7 @@ pub fn execute(
     url: Option<&str>,
     name: Option<&str>,
     prefix: Option<&str>,
+    branch: Option<&str>,
     path: Option<&Path>,
 ) -> anyhow::Result<()> {
     let stdin = io::stdin();
@@ -104,22 +105,44 @@ pub fn execute(
     // Fetch to populate remote tracking branches
     run_git_ok(Some(&bare_path), &["fetch", "origin"])?;
 
-    // Detect default branch
-    let branch = default_branch(&bare_path)?;
+    // 4. Branch — use flag, prompt, or auto-detect
+    let detected = match default_branch(&bare_path) {
+        Ok(branch) => branch,
+        Err(e) => {
+            eprintln!(
+                "{} Could not detect default branch ({}), assuming \"main\"",
+                style("!").yellow().bold(),
+                e
+            );
+            "main".to_string()
+        }
+    };
+    let branch = match branch {
+        Some(b) => b.to_string(),
+        None => {
+            let line = prompt("Default branch", Some(&detected), &mut reader)?;
+            if line.is_empty() { detected } else { line }
+        }
+    };
 
     // Create initial worktree as sibling of repo.git
     let wt_path = worktree_dir(&bare_path, &branch, &prefix);
     add_worktree(&bare_path, &wt_path, Some(&branch), &[])?;
 
-    let wt_dir_name = wt_path
-        .file_name()
-        .map(|n| n.to_string_lossy().to_string())
-        .unwrap_or_default();
     println!(
-        "\n{} Initialized {}/ with worktree {}",
+        "\n{} Initialized {}/\n\n    {:<12}{}\n    {:<12}{}",
         style("✓").green().bold(),
         style(&project_name).bold(),
-        style(&wt_dir_name).cyan().bold(),
+        "bare repo",
+        style(format!("{}/repo.git", project_name)).dim(),
+        "worktree",
+        style(
+            wt_path
+                .file_name()
+                .map(|n| format!("{}/{}", project_name, n.to_string_lossy()))
+                .unwrap_or_default()
+        )
+        .dim(),
     );
     Ok(())
 }
