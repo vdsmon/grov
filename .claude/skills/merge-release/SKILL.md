@@ -30,23 +30,42 @@ Check if the local branch is ahead of the remote (`git status -sb`). If ahead, p
 
 ### 4. Wait for CI
 
-Run `gh pr checks --watch --fail-on-failure`. This blocks until all checks complete.
+Run `gh pr checks --watch`. This blocks until all checks complete.
 
 - If checks pass, continue.
 - If checks fail, show the failure details and stop. Do not attempt to merge.
 
-### 5. Merge the PR
+### 5. Review and resolve CodeRabbit comments
+
+CodeRabbit reviews PRs automatically. Its comments must be addressed before merging.
+
+1. Fetch PR review comments: `gh api repos/{owner}/{repo}/pulls/{number}/comments`
+2. Fetch unresolved review threads via GraphQL:
+   ```
+   gh api graphql -f query='{ repository(owner: "{owner}", name: "{repo}") { pullRequest(number: {number}) { reviewThreads(first: 50) { nodes { id isResolved comments(first: 1) { nodes { body author { login } path line } } } } } } }'
+   ```
+3. For each unresolved thread:
+   - Show the comment to the user (file, line, summary of the issue).
+   - If already fixed (e.g. by a subsequent commit), resolve it:
+     ```
+     gh api graphql -f query='mutation { resolveReviewThread(input: { threadId: "{id}" }) { thread { isResolved } } }'
+     ```
+   - If not yet fixed, fix the issue, commit, push, and then resolve the thread.
+   - If the comment is not applicable, ask the user whether to resolve it anyway.
+4. Confirm all threads are resolved before proceeding.
+
+### 6. Merge the PR
 
 Run `gh pr merge --squash --delete-branch`. The repo requires linear history, so squash merge is the default.
 
-### 6. Switch to main and pull
+### 7. Switch to main and pull
 
 ```sh
 git checkout main
 git pull
 ```
 
-### 7. Ask about release
+### 8. Ask about release
 
 Ask the user using AskUserQuestion whether they want to release now or stop:
 
