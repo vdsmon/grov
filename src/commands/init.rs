@@ -1,4 +1,4 @@
-use std::io::{self, BufRead, Write};
+use std::io;
 use std::path::Path;
 
 use console::style;
@@ -8,22 +8,7 @@ use crate::git::executor::run_git_ok;
 use crate::git::repo::default_branch;
 use crate::git::worktree::add_worktree;
 use crate::paths::{repo_name_from_url, worktree_dir};
-
-fn prompt(label: &str, default: Option<&str>, reader: &mut impl BufRead) -> io::Result<String> {
-    let prompt_marker = style("?").cyan().bold();
-    let label_styled = style(label).bold();
-    match default {
-        Some(d) => eprint!(
-            "{prompt_marker} {label_styled} {}: ",
-            style(format!("[{d}]")).dim()
-        ),
-        None => eprint!("{prompt_marker} {label_styled}: "),
-    }
-    io::stderr().flush()?;
-    let mut line = String::new();
-    reader.read_line(&mut line)?;
-    Ok(line.trim().to_string())
-}
+use crate::ui::prompt;
 
 pub fn execute(
     url: Option<&str>,
