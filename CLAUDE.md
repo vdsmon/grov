@@ -157,5 +157,5 @@ This workflow supports using different models for planning (e.g., Opus) vs imple
 ## Gotchas
 
 - `Cargo.lock` is intentionally gitignored, so avoid `--locked` in CI commands.
-- Some automation checks (for example CodeRabbit) may appear on PRs but are not required merge gates.
+- CodeRabbit reviews PRs automatically. Its comments must be reviewed and addressed before merging — resolve conversations on GitHub after fixing or determining they're not applicable.
 - `assert_cmd` 2.x uses deprecated `cargo_bin`; tests currently allow deprecation where needed.

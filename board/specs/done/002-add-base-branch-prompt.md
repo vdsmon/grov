@@ -16,7 +16,7 @@ Source: `board/todo/add-base-branch-prompt.md` (consumed)
 
 ## Acceptance Criteria
 
-- [x] When creating a new branch (not existing locally or remotely) without `--base`, `grov add` prompts: `? Base branch [<default>]: `
+- [x] When creating a new branch (not existing locally or remotely) without `--base`, `grov add` prompts: `? Base branch [<default>]:`
 - [x] The prompt default is the current branch of the cwd's worktree (detected via `git -C <cwd> rev-parse --abbrev-ref HEAD`, using the original working directory — not the bare repo path)
 - [x] If current branch detection fails (e.g., running from `repo.git` or project root), the prompt default falls back to `default_branch()`
 - [x] If `--base` is provided, no prompt appears (existing behavior preserved)
