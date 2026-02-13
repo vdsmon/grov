@@ -141,27 +141,29 @@ cargo test --all-targets --all-features
 
 ## Board-Driven Development
 
-Ideas flow through a three-stage pipeline managed in `board/`:
+Ideas flow through a four-stage pipeline managed in `board/`:
 
 ```
-/todo  →  /spec  →  /implement
-board/todo/   board/specs/active/   feature branch → board/specs/done/
+/todo  →  /refine-todos  →  /spec  →  /implement
+board/0-todo/   board/1-refined-todos/   board/2-active-specs/   feature branch → board/3-done-specs/
 ```
 
-- **`/todo <idea>`** — Capture a raw idea to `board/todo/slug.md` (minimal format, no analysis)
-- **`/spec <description or board/todo/slug.md>`** — Research the codebase, ask questions, and write a spec to `board/specs/active/NNN-name.md` (status: `draft`). If a todo file is referenced, it is consumed and deleted after the spec is written.
+- **`/todo <idea>`** — Capture a raw idea to `board/0-todo/slug.md` (minimal format, no analysis)
+- **`/refine-todos`** — Scan `board/0-todo/`, suggest merge groups and refinement candidates, produce improved todos in `board/1-refined-todos/`. Consumed originals are deleted from `board/0-todo/` (git history is the archive).
+- **`/spec <description or board/1-refined-todos/slug.md>`** — Research the codebase, ask questions, and write a spec to `board/2-active-specs/NNN-name.md` (status: `draft`). If a refined-todo file is referenced, it is consumed and deleted after the spec is written.
 - **Review & approve** — Edit the spec, then change status to `approved`
-- **`/implement board/specs/active/NNN-name.md [task N]`** — Implement a specific task from an approved spec
-- **Done** — When all tasks are complete and status is set to `done`, the spec moves from `board/specs/active/` to `board/specs/done/`
+- **`/implement board/2-active-specs/NNN-name.md [task N]`** — Implement a specific task from an approved spec
+- **Done** — When all tasks are complete and status is set to `done`, the spec moves from `board/2-active-specs/` to `board/3-done-specs/`
 
 Directory layout:
 
 - `board/TEMPLATE.md` — Spec template
-- `board/todo/` — Raw ideas (one file per idea, named by slug)
-- `board/specs/active/` — In-progress specs (draft, approved, in-progress)
-- `board/specs/done/` — Completed specs (status: done)
+- `board/0-todo/` — Raw ideas (one file per idea, named by slug)
+- `board/1-refined-todos/` — Refined/merged todos ready for speccing
+- `board/2-active-specs/` — In-progress specs (draft, approved, in-progress)
+- `board/3-done-specs/` — Completed specs (status: done)
 
-Todo files use kebab-case slugs (no numbers). Todo files are deleted when consumed by `/spec`; git history is the archive. Each spec includes user story, acceptance criteria, technical design, tasks, and testing requirements. Tasks should be small enough for one agent session.
+Todo files use kebab-case slugs (no numbers). `/refine-todos` consumes from `board/0-todo/` and writes to `board/1-refined-todos/`. `/spec` consumes from `board/1-refined-todos/`. Consumed files are deleted at each stage; git history is the archive. Each spec includes user story, acceptance criteria, technical design, tasks, and testing requirements. Tasks should be small enough for one agent session.
 
 This workflow supports using different models for planning (e.g., Opus) vs implementation (e.g., Sonnet).
 

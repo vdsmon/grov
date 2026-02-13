@@ -9,11 +9,11 @@ Implement a specific task from a spec. The user will reference a spec file and o
 
 1. **Pick or receive the spec**:
    - If the user provided arguments (a spec file path or number), use that directly — skip the picker.
-   - If no arguments were provided, scan `board/specs/active/` for `.md` files.
+   - If no arguments were provided, scan `board/2-active-specs/` for `.md` files.
      - If there are specs: present a picker using AskUserQuestion. Show up to 5 files (most recent first by filename). Each option label is the spec filename (without `.md`), and the description is the `# Spec: Title` and `Status` from the file.
      - If there are no specs: tell the user there are no specs to implement and stop.
 
-2. **Read the spec**: Open the selected spec file in `board/specs/active/`. Understand the full context — user story, acceptance criteria, technical design, and the specific task to implement.
+2. **Read the spec**: Open the selected spec file in `board/2-active-specs/`. Understand the full context — user story, acceptance criteria, technical design, and the specific task to implement.
 
 3. **Ensure spec is in-progress**: Handle the spec status:
    - `draft` → present a summary (user story, acceptance criteria, tasks) and ask the user to confirm approval via AskUserQuestion. If approved, change status to `in-progress`. If declined, stop.
@@ -48,7 +48,7 @@ Every plan MUST follow this structure. Fill in each section.
 
 ## Context
 
-Spec: `board/specs/active/NNN-name.md`
+Spec: `board/2-active-specs/NNN-name.md`
 Task N of M (is_last_task: yes/no)
 Branch: `feat/NNN-name`
 
@@ -76,7 +76,7 @@ cargo test --all-targets --all-features
 
 ## Wrap-up (do these after implementation + verification)
 
-1. In `board/specs/active/NNN-name.md`, check off Task N (`- [ ]` → `- [x]`)
+1. In `board/2-active-specs/NNN-name.md`, check off Task N (`- [ ]` → `- [x]`)
 2. Re-read the full spec — check off any newly satisfied boxes in Acceptance Criteria and Testing sections
 3. Ask the user: continue to next task (`/implement`), commit (`/commit-push-pr`), or stop?
 
@@ -84,7 +84,7 @@ cargo test --all-targets --all-features
 4. Run code review: use Task tool with `subagent_type="feature-dev:code-reviewer"` to review all changes on the branch (diff against `main`). Only act on clear bugs, logic errors, or security issues — skip out-of-scope or speculative suggestions.
 5. Run `/claude-md-management:revise-claude-md` to capture new patterns or conventions
 6. If the implementation changes CLI behavior or flags, update `README.md`
-7. Move spec from `board/specs/active/` to `board/specs/done/` and set status to `done`
+7. Move spec from `board/2-active-specs/` to `board/3-done-specs/` and set status to `done`
 8. Ask the user whether to commit and open a PR (`/commit-push-pr`). Use a conventional commit title. The spec move must be included in the commit.
 ```
 
