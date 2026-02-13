@@ -6,11 +6,11 @@ description: Create a structured spec for a feature or change
 Create a spec for the requested feature or change. Follow this process:
 
 1. **Pick or receive the idea**:
-   - If the user provided arguments (a description or a `board/todo/` file path), use that directly — skip the picker.
-   - If no arguments were provided, scan `board/todo/` for `.md` files.
-     - If there are todos: present a picker using AskUserQuestion. Show up to 5 files (most recent first by filename). Each option label is the todo filename (without `.md`), and the description is the `# Title` from the file. The user can also type a fresh idea via the "Other" free-text option.
-     - If there are no todos: skip the picker and ask the user to describe the idea.
-   - If the selected option is a `board/todo/` file, read it as the idea input and remember the path — it will be deleted after the spec is written.
+   - If the user provided arguments (a description or a `board/1-refined-todos/` file path), use that directly — skip the picker.
+   - If no arguments were provided, scan `board/1-refined-todos/` for `.md` files.
+     - If there are refined todos: present a picker using AskUserQuestion. Show up to 5 files (most recent first by filename). Each option label is the filename (without `.md`), and the description is the `# Title` from the file. The user can also type a fresh idea via the "Other" free-text option.
+     - If there are no refined todos: skip the picker and ask the user to describe the idea.
+   - If the selected option is a `board/1-refined-todos/` file, read it as the idea input and remember the path — it will be deleted after the spec is written.
 
 2. **Research the codebase**: Read relevant source files to understand the current architecture, patterns, and conventions. Use the CLAUDE.md and existing code as your guide. Do this silently before engaging the user.
 
@@ -30,7 +30,7 @@ Create a spec for the requested feature or change. Follow this process:
    - Fill in blanks with "reasonable" guesses
    - Write the spec and then ask "does this look right?" — ask FIRST, write AFTER
 
-4. **Write the spec**: Only after all questions are answered, create a new file in `board/specs/active/` following the template at `board/TEMPLATE.md`. Name it with a sequential number and kebab-case title (e.g., `board/specs/active/003-feature-name.md`). Use the next available number across both `board/specs/active/` and `board/specs/done/`.
+4. **Write the spec**: Only after all questions are answered, create a new file in `board/2-active-specs/` following the template at `board/TEMPLATE.md`. Name it with a sequential number and kebab-case title (e.g., `board/2-active-specs/003-feature-name.md`). Use the next available number across both `board/2-active-specs/` and `board/3-done-specs/`.
 
 5. **Fill in all sections**:
    - Write a clear user story
@@ -44,7 +44,7 @@ Create a spec for the requested feature or change. Follow this process:
 
 6. **Set status to `draft`** and present the spec for review.
 
-7. **Delete the source todo**: If a `board/todo/` file was consumed in step 1, delete it now. Git history preserves the original idea.
+7. **Delete the source todo**: If a `board/1-refined-todos/` file was consumed in step 1, delete it now. Git history preserves the original idea.
 
 Guidelines:
 - Each task should be self-contained: an agent reading only the spec and the codebase should be able to implement it

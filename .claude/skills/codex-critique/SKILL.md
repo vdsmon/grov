@@ -5,7 +5,7 @@ description: Send a spec or plan to Codex CLI for an independent critique
 
 Get an independent critique from Codex CLI on a spec, plan, or document. Follow this process:
 
-1. **Identify the target**: The user may provide a file path as an argument (e.g., `board/specs/active/003-feature.md`). If no argument is given, scan `board/specs/active/` for draft or approved specs and present a picker using AskUserQuestion. If there are no specs, ask the user what they want critiqued.
+1. **Identify the target**: The user may provide a file path as an argument (e.g., `board/2-active-specs/003-feature.md`). If no argument is given, scan `board/2-active-specs/` for draft or approved specs and present a picker using AskUserQuestion. If there are no specs, ask the user what they want critiqued.
 
 2. **Read the file**: Read the target file so you understand what's being sent for critique.
 

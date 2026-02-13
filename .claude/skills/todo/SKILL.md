@@ -3,13 +3,13 @@ name: todo
 description: Capture a raw idea to the board todo queue
 ---
 
-Capture the user's raw idea into `board/todo/`. Follow this process:
+Capture the user's raw idea into `board/0-todo/`. Follow this process:
 
 1. **Generate a slug**: Create a short kebab-case slug from the idea (e.g., `add-base-branch-prompt`). Keep it under 5 words.
 
 2. **Polish lightly**: Fix grammar and spelling in the user's input. Do NOT expand, analyze, research the codebase, or ask clarifying questions. Keep the idea's original intent and scope intact.
 
-3. **Write the file**: Create `board/todo/slug.md` with this format:
+3. **Write the file**: Create `board/0-todo/slug.md` with this format:
 
    ```
    # Title
