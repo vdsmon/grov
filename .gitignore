@@ -17,3 +17,6 @@ reports/
 
 # Claude
 .claude/settings.local.json
+
+# Serena
+.serena/
