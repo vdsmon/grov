@@ -125,15 +125,29 @@ cargo test --all-targets --all-features
 - Issue templates: `.github/ISSUE_TEMPLATE/*`
 - Security policy: `SECURITY.md`
 
-## Spec-Driven Development
+## Board-Driven Development
 
-Feature planning and implementation are decoupled via structured specs in `specs/`.
+Ideas flow through a three-stage pipeline managed in `board/`:
 
-- **`/spec <description>`** — Research the codebase and write a spec to `specs/NNN-name.md` (status: `draft`)
+```
+/todo  →  /spec  →  /implement
+board/todo/   board/specs/active/   feature branch → board/specs/done/
+```
+
+- **`/todo <idea>`** — Capture a raw idea to `board/todo/slug.md` (minimal format, no analysis)
+- **`/spec <description or board/todo/slug.md>`** — Research the codebase, ask questions, and write a spec to `board/specs/active/NNN-name.md` (status: `draft`). If a todo file is referenced, it is consumed and deleted after the spec is written.
 - **Review & approve** — Edit the spec, then change status to `approved`
-- **`/implement specs/NNN-name.md [task N]`** — Implement a specific task from an approved spec
+- **`/implement board/specs/active/NNN-name.md [task N]`** — Implement a specific task from an approved spec
+- **Done** — When all tasks are complete and status is set to `done`, the spec moves from `board/specs/active/` to `board/specs/done/`
 
-Spec template: `specs/TEMPLATE.md`. Each spec includes user story, acceptance criteria, technical design, tasks, and testing requirements. Tasks should be small enough for one agent session.
+Directory layout:
+
+- `board/TEMPLATE.md` — Spec template
+- `board/todo/` — Raw ideas (one file per idea, named by slug)
+- `board/specs/active/` — In-progress specs (draft, approved, in-progress)
+- `board/specs/done/` — Completed specs (status: done)
+
+Todo files use kebab-case slugs (no numbers). Todo files are deleted when consumed by `/spec`; git history is the archive. Each spec includes user story, acceptance criteria, technical design, tasks, and testing requirements. Tasks should be small enough for one agent session.
 
 This workflow supports using different models for planning (e.g., Opus) vs implementation (e.g., Sonnet).
 

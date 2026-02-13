@@ -12,5 +12,8 @@ Thumbs.db
 *.swo
 *~
 
+# QA reports
+reports/
+
 # Claude
 .claude/settings.local.json
