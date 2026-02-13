@@ -58,6 +58,8 @@ CodeRabbit reviews PRs automatically. Its comments must be addressed before merg
 
 Run `gh pr merge --squash --delete-branch`. The repo requires linear history, so squash merge is the default.
 
+**Important**: Ensure the squash merge title uses conventional commit format (e.g., `feat: Add dark mode`, `fix: Handle empty input`). GitHub defaults to the PR title — verify it's conventional before merging.
+
 ### 7. Switch to main and pull
 
 ```sh
@@ -65,11 +67,15 @@ git checkout main
 git pull
 ```
 
-### 8. Ask about release
+### 8. Check for release-please PR
 
-Ask the user using AskUserQuestion whether they want to release now or stop:
+Releases are automated via release-please. After merging to main, check if a Release PR exists:
 
-- "Yes, release" — run the `/release` skill
-- "No, stop here" — done
+```sh
+gh pr list --label 'autorelease: pending'
+```
 
-If the user chooses to release, invoke the `/release` skill which handles clean-tree verification, CI, bump level prompt, and `cargo release`.
+- If a Release PR exists, show it to the user (`gh pr view <number>`) and ask via AskUserQuestion:
+  - "Merge the Release PR now" — merge it (use merge commit, not squash)
+  - "Skip for now" — done
+- If no Release PR exists, inform the user that release-please will create one on the next push to main (if conventional commits warrant a version bump).

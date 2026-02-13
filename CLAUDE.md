@@ -85,6 +85,7 @@ cargo test --all-targets --all-features
 - Path helper: `worktree_dir(bare_repo, branch, prefix)`
 - Bare repo discovery: `find_bare_repo()` looks in current context and parent layout
 - Edition/MSRV: Rust 2024 + 1.93
+- PR titles must use conventional commit format (`feat:`, `fix:`, `chore:`, `docs:`, `ci:`, `refactor:`, `test:`) — release-please uses these to determine version bumps and changelog entries
 
 ## Tests
 
@@ -107,13 +108,18 @@ cargo test --all-targets --all-features
   - required jobs: `fmt`, `clippy`, `test`
   - uses Rust cache and concurrency cancellation
 
-- Release workflow: `.github/workflows/release.yml`
-  - triggers on tag push `v*`
-  - `preflight` gate (fmt/clippy/test)
-  - `publish` job uses environment `release`
-  - cross-platform builds and artifact packaging
-  - attaches tarballs and `checksums.txt` to GitHub Release
-  - requires `CARGO_REGISTRY_TOKEN` in repo secrets
+- Release-please workflow: `.github/workflows/release-please.yml`
+  - triggers on `push` to `main`
+  - maintains a "Release PR" with changelog and version bumps based on conventional commits
+  - when Release PR is merged: creates git tag + GitHub Release, publishes to crates.io
+  - config: `release-please-config.json`, manifest: `.release-please-manifest.json`
+  - requires `RELEASE_PLEASE_TOKEN` PAT (fine-grained, scoped to repo: Contents + Pull Requests)
+  - requires `CARGO_REGISTRY_TOKEN` in `release` environment
+
+- Release binaries workflow: `.github/workflows/release.yml`
+  - triggers on `release` event (type: `published`)
+  - cross-platform builds (4 targets) and artifact packaging
+  - attaches tarballs and `checksums.txt` to the GitHub Release via `gh release upload`
 
 ## Repository Governance (Current)
 
@@ -159,3 +165,4 @@ This workflow supports using different models for planning (e.g., Opus) vs imple
 - `Cargo.lock` is intentionally gitignored, so avoid `--locked` in CI commands.
 - CodeRabbit reviews PRs automatically. Its comments must be reviewed and addressed before merging — resolve conversations on GitHub after fixing or determining they're not applicable.
 - `assert_cmd` 2.x uses deprecated `cargo_bin`; tests currently allow deprecation where needed.
+- `RELEASE_PLEASE_TOKEN` PAT must be kept valid — if it expires, release-please can't create/update Release PRs and CI won't trigger on them. Regenerate via GitHub Settings → Developer Settings → Fine-grained PATs.
