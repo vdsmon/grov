@@ -1,6 +1,6 @@
 # Spec: Add base branch prompt to `grov add`
 
-> Status: in-progress
+> Status: done
 
 ## User Story
 
