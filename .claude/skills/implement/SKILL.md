@@ -85,7 +85,7 @@ cargo test --all-targets --all-features
 5. Run `/claude-md-management:revise-claude-md` to capture new patterns or conventions
 6. If the implementation changes CLI behavior or flags, update `README.md`
 7. Move spec from `board/specs/active/` to `board/specs/done/` and set status to `done`
-8. Ask the user whether to commit and open a PR (`/commit-push-pr`) — the spec move must be included in the commit
+8. Ask the user whether to commit and open a PR (`/commit-push-pr`). Use a conventional commit title. The spec move must be included in the commit.
 ```
 
 ## Rules
