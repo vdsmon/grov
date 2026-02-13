@@ -76,6 +76,6 @@ gh pr list --label 'autorelease: pending'
 ```
 
 - If a Release PR exists, show it to the user (`gh pr view <number>`) and ask via AskUserQuestion:
-  - "Merge the Release PR now" — merge it (use merge commit, not squash)
+  - "Merge the Release PR now" — merge it with `gh pr merge --squash`
   - "Skip for now" — done
 - If no Release PR exists, inform the user that release-please will create one on the next push to main (if conventional commits warrant a version bump).

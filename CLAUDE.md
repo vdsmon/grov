@@ -115,6 +115,10 @@ cargo test --all-targets --all-features
   - config: `release-please-config.json`, manifest: `.release-please-manifest.json`
   - requires `RELEASE_PLEASE_TOKEN` PAT (fine-grained, scoped to repo: Contents + Pull Requests)
   - requires `CARGO_REGISTRY_TOKEN` in `release` environment
+  - version bump rules (0.x): `fix:` → patch, `feat:` → minor, `feat!:`/`BREAKING CHANGE` → minor
+  - `chore:`, `docs:`, `ci:`, `refactor:`, `test:` → no version bump (hidden in changelog)
+  - to force a specific version, add a `Release-As: X.Y.Z` trailer in a commit message
+  - check for Release PR: `gh pr list --label 'autorelease: pending'`
 
 - Release binaries workflow: `.github/workflows/release.yml`
   - triggers on `release` event (type: `published`)
@@ -130,6 +134,7 @@ cargo test --all-targets --all-features
   - no force pushes or deletions
 - CODEOWNERS: `.github/CODEOWNERS`
 - Dependabot config: `.github/dependabot.yml` (weekly Cargo + GitHub Actions updates)
+- CodeRabbit config: `.coderabbit.yaml` (skips auto-review on release-please PRs)
 - PR template: `.github/pull_request_template.md`
 - Issue templates: `.github/ISSUE_TEMPLATE/*`
 - Security policy: `SECURITY.md`
