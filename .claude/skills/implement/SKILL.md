@@ -84,8 +84,8 @@ cargo test --all-targets --all-features
 4. Run code review: use Task tool with `subagent_type="feature-dev:code-reviewer"` to review all changes on the branch (diff against `main`). Only act on clear bugs, logic errors, or security issues — skip out-of-scope or speculative suggestions.
 5. Run `/claude-md-management:revise-claude-md` to capture new patterns or conventions
 6. If the implementation changes CLI behavior or flags, update `README.md`
-7. Ask the user whether to commit and open a PR (`/commit-push-pr`)
-8. Move spec from `board/specs/active/` to `board/specs/done/` and set status to `done`
+7. Move spec from `board/specs/active/` to `board/specs/done/` and set status to `done`
+8. Ask the user whether to commit and open a PR (`/commit-push-pr`) — the spec move must be included in the commit
 ```
 
 ## Rules
