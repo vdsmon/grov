@@ -4,6 +4,7 @@ pub mod config;
 pub mod errors;
 pub mod git;
 pub mod paths;
+pub mod ui;
 
 use anyhow::Context;
 use clap::Parser;

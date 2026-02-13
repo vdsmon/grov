@@ -27,7 +27,7 @@ Rust CLI for managing Git worktrees around a bare repo layout.
   - resolution order:
     1. existing local branch
     2. existing remote branch (`origin/<branch>`) with tracking
-    3. new branch from `--base` or detected default branch
+    3. new branch — prompts for base branch (defaults to current branch); requires `--base` in non-TTY
   - attempts `git fetch origin` first
   - fetch failures are warnings (non-fatal); command continues with local refs
 
@@ -72,6 +72,7 @@ cargo test --all-targets --all-features
 - `src/commands/*.rs`: command handlers (`init`, `add`, `list`, `remove`, `completions`)
 - `src/git/executor.rs`: shared git command wrapper (`run_git`, `run_git_ok`)
 - `src/git/repo.rs`: bare repo discovery + default branch detection
+- `src/ui.rs`: shared interactive prompt utilities (used by `init` and `add`)
 - `src/git/worktree.rs`: porcelain parsing, worktree CRUD, branch/directory matching helpers
 - `src/git/status.rs`: dirty and ahead/behind status
 - `src/paths.rs`: branch sanitization + worktree naming
@@ -90,6 +91,8 @@ cargo test --all-targets --all-features
 - Unit tests:
   - `src/paths.rs`
   - `src/git/worktree.rs`
+  - `src/git/repo.rs`
+  - `src/commands/add.rs`
 - Integration tests:
   - `tests/cli_init.rs`
   - `tests/cli_add.rs`

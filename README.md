@@ -55,7 +55,7 @@ Create a new worktree, with branch resolution in this order:
 
 1. existing local branch
 2. existing remote branch (`origin/<branch>`) with tracking
-3. new local branch from `--base` or default branch
+3. new local branch — prompts for base branch (defaults to the current branch)
 
 ```sh
 grov add feature/login
@@ -65,8 +65,9 @@ grov add experimental --path /tmp/my-custom-worktree
 
 Notes:
 
-- `grov add` attempts `git fetch origin` first.
-- fetch failures are warned and do not abort the command.
+- `grov add` attempts `git fetch origin` first; fetch failures are warned and do not abort the command.
+- When creating a new branch without `--base`, an interactive prompt asks for the base branch with the current branch as the default.
+- In non-interactive contexts (scripts, CI), pass `--base` explicitly — stdin must be a terminal or the command exits with an error.
 
 ### `grov list` (alias: `grov ls`)
 

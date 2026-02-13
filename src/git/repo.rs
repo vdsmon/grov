@@ -87,3 +87,96 @@ pub fn default_branch(repo: &Path) -> Result<String> {
 
     Ok(branch.to_string())
 }
+
+/// Detect the current branch of the worktree at `cwd`.
+///
+/// Returns `Ok(None)` when:
+/// - `cwd` is not inside a git work tree (e.g. bare repo, non-repo dir)
+/// - HEAD is detached
+/// - git commands fail (non-zero exit)
+///
+/// IO/spawn errors propagate via `?`.
+pub fn current_branch(cwd: &Path) -> Result<Option<String>> {
+    let cwd_lossy = cwd.to_string_lossy();
+
+    let inside = run_git(
+        None,
+        &["-C", &cwd_lossy, "rev-parse", "--is-inside-work-tree"],
+    )?;
+    if !inside.status.success() || inside.stdout != "true" {
+        return Ok(None);
+    }
+
+    let head = run_git(
+        None,
+        &["-C", &cwd_lossy, "rev-parse", "--abbrev-ref", "HEAD"],
+    )?;
+    if !head.status.success() || head.stdout == "HEAD" {
+        return Ok(None);
+    }
+
+    Ok(Some(head.stdout))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::process::Command;
+    use tempfile::TempDir;
+
+    fn git(dir: &Path, args: &[&str]) {
+        let status = Command::new("git")
+            .args(args)
+            .current_dir(dir)
+            .output()
+            .expect("failed to run git")
+            .status;
+        assert!(status.success(), "git {args:?} failed");
+    }
+
+    fn init_repo(dir: &Path) {
+        git(dir, &["init", "-b", "main"]);
+        git(dir, &["config", "user.email", "test@test.com"]);
+        git(dir, &["config", "user.name", "Test"]);
+    }
+
+    #[test]
+    fn test_current_branch_normal_worktree() {
+        let tmp = TempDir::new().unwrap();
+        let dir = tmp.path();
+        init_repo(dir);
+        git(dir, &["commit", "--allow-empty", "-m", "init"]);
+
+        let branch = current_branch(dir).unwrap();
+        assert_eq!(branch, Some("main".to_string()));
+    }
+
+    #[test]
+    fn test_current_branch_bare_repo_returns_none() {
+        let tmp = TempDir::new().unwrap();
+        let dir = tmp.path();
+        git(dir, &["init", "--bare"]);
+
+        let branch = current_branch(dir).unwrap();
+        assert_eq!(branch, None);
+    }
+
+    #[test]
+    fn test_current_branch_detached_head_returns_none() {
+        let tmp = TempDir::new().unwrap();
+        let dir = tmp.path();
+        init_repo(dir);
+        git(dir, &["commit", "--allow-empty", "-m", "init"]);
+        git(dir, &["checkout", "--detach"]);
+
+        let branch = current_branch(dir).unwrap();
+        assert_eq!(branch, None);
+    }
+
+    #[test]
+    fn test_current_branch_nonexistent_dir_returns_none() {
+        let dir = Path::new("/tmp/grov_nonexistent_test_dir_12345");
+        let branch = current_branch(dir).unwrap();
+        assert_eq!(branch, None);
+    }
+}
