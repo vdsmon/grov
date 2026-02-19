@@ -178,6 +178,39 @@ fn add_existing_local_branch_no_prompt() {
 }
 
 #[test]
+fn add_prints_cd_hint() {
+    let (_tmp, bare, project_dir) = common::create_bare_repo();
+
+    let main_wt = project_dir.join("test_main");
+    let output = std::process::Command::new("git")
+        .env("GIT_DIR", &bare)
+        .args(["worktree", "add", main_wt.to_str().unwrap(), "main"])
+        .output()
+        .unwrap();
+    assert!(output.status.success());
+
+    // Create a local branch
+    let output = std::process::Command::new("git")
+        .env("GIT_DIR", &bare)
+        .args(["branch", "hint-branch", "main"])
+        .output()
+        .unwrap();
+    assert!(output.status.success());
+
+    Command::cargo_bin("grov")
+        .unwrap()
+        .args(["add", "hint-branch"])
+        .current_dir(&main_wt)
+        .assert()
+        .success()
+        .stdout(
+            predicate::str::contains("To start working:")
+                .and(predicate::str::contains("cd"))
+                .and(predicate::str::contains("test_hint-branch")),
+        );
+}
+
+#[test]
 fn add_existing_remote_branch_no_prompt() {
     let (_tmp, bare, project_dir) = common::create_bare_repo();
 

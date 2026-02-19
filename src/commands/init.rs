@@ -7,7 +7,7 @@ use crate::config::{GrovConfig, WorktreeConfig, write_config};
 use crate::git::executor::run_git_ok;
 use crate::git::repo::default_branch;
 use crate::git::worktree::add_worktree;
-use crate::paths::{repo_name_from_url, worktree_dir};
+use crate::paths::{relative_from, repo_name_from_url, worktree_dir};
 use crate::ui::prompt;
 
 pub fn execute(
@@ -129,5 +129,35 @@ pub fn execute(
         )
         .dim(),
     );
+
+    // Print cd hints
+    let cwd = std::env::current_dir()?;
+    let project_rel = relative_from(&project_dir, &cwd);
+    if project_rel != Path::new(".") {
+        let display = project_rel.display().to_string();
+        let cd_arg = if display.contains(' ') {
+            format!("\"{}\"", display)
+        } else {
+            display
+        };
+        println!(
+            "{}",
+            style(format!("  To enter the project:  cd {cd_arg}")).dim()
+        );
+    }
+    let wt_rel = relative_from(&wt_path, &cwd);
+    if wt_rel != Path::new(".") {
+        let display = wt_rel.display().to_string();
+        let cd_arg = if display.contains(' ') {
+            format!("\"{}\"", display)
+        } else {
+            display
+        };
+        println!(
+            "{}",
+            style(format!("  To start working:      cd {cd_arg}")).dim()
+        );
+    }
+
     Ok(())
 }

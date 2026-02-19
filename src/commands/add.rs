@@ -6,7 +6,7 @@ use crate::config::read_config;
 use crate::git::executor::run_git_ok;
 use crate::git::repo::{current_branch, default_branch, find_bare_repo};
 use crate::git::worktree::{add_worktree, branch_exists_local, branch_exists_remote};
-use crate::paths::worktree_dir;
+use crate::paths::{relative_from, worktree_dir};
 use crate::ui::prompt;
 
 #[derive(Debug, PartialEq)]
@@ -112,6 +112,22 @@ pub fn execute(branch: &str, base: Option<&str>, custom_path: Option<&Path>) -> 
         style(wt_path.display()).bold(),
         style(branch).cyan().bold(),
     );
+
+    // Print cd hint if cwd differs from the new worktree
+    let rel = relative_from(&wt_path, &cwd);
+    if rel != Path::new(".") {
+        let display = rel.display().to_string();
+        let cd_arg = if display.contains(' ') {
+            format!("\"{}\"", display)
+        } else {
+            display
+        };
+        println!(
+            "{}",
+            style(format!("  To start working:  cd {cd_arg}")).dim()
+        );
+    }
+
     Ok(())
 }
 

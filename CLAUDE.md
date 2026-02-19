@@ -22,6 +22,7 @@ Rust CLI for managing Git worktrees around a bare repo layout.
   - flags: `--url`, `--name`, `--prefix`, `--branch`, `--path`
   - `--branch` overrides auto-detected default branch (falls back to "main" if detection fails)
   - success output prints both `repo.git` and worktree paths
+  - prints dimmed cd hints after success (project dir + worktree)
 
 - `grov add <branch>`
   - resolution order:
@@ -30,6 +31,7 @@ Rust CLI for managing Git worktrees around a bare repo layout.
     3. new branch — prompts for base branch (defaults to current branch); requires `--base` in non-TTY
   - attempts `git fetch origin` first
   - fetch failures are warnings (non-fatal); command continues with local refs
+  - prints a dimmed cd hint after success (worktree path)
 
 - `grov list` (`grov ls`)
   - full view prints marker, branch, status, ahead/behind, and dir name
@@ -75,7 +77,7 @@ cargo test --all-targets --all-features
 - `src/ui.rs`: shared interactive prompt utilities (used by `init` and `add`)
 - `src/git/worktree.rs`: porcelain parsing, worktree CRUD, branch/directory matching helpers
 - `src/git/status.rs`: dirty and ahead/behind status
-- `src/paths.rs`: branch sanitization + worktree naming
+- `src/paths.rs`: branch sanitization, worktree naming, relative path helper (`relative_from`)
 - `src/errors.rs`: domain error enum (`GrovError`)
 
 ## Conventions
