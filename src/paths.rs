@@ -203,4 +203,20 @@ mod tests {
             PathBuf::from("../..")
         );
     }
+
+    #[test]
+    fn relative_from_path_with_spaces() {
+        assert_eq!(
+            relative_from(Path::new("/a/my dir/c"), Path::new("/a/my dir")),
+            PathBuf::from("c")
+        );
+    }
+
+    #[test]
+    fn relative_from_no_common_prefix_returns_target() {
+        assert_eq!(
+            relative_from(Path::new("d:/foo"), Path::new("c:/bar")),
+            PathBuf::from("d:/foo")
+        );
+    }
 }

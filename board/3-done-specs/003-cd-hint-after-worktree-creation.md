@@ -39,7 +39,7 @@ After the existing success block, compute relative paths from `cwd` (which is `p
 2. `wt_path` — the initial worktree
 
 Print two dimmed lines with sentence labels:
-```
+```text
   To enter the project:  cd project/
   To start working:      cd project/prefix_main
 ```
@@ -49,7 +49,7 @@ Only print each line if cwd != target. In practice, cwd will always differ from 
 **`grov add` changes** (src/commands/add.rs, after line 113):
 
 Compute relative path from `cwd` to `wt_path`. Print one dimmed line:
-```
+```text
   To start working:  cd prefix_branch
 ```
 
@@ -67,7 +67,7 @@ Only print if cwd != wt_path.
 ## Tasks
 
 - [x] **Task 1**: Add `relative_from(target, base)` helper to `src/paths.rs` with unit tests. The function takes two absolute paths and returns a relative path string from `base` to `target`. Include tests for: same directory (returns `.`), child directory, sibling directory, deeply nested paths, and fallback behavior.
-- [x] **Task 2**: Add cd hint output to `grov add` in `src/commands/add.rs`. After the existing success `println!`, compute relative path from `cwd` to `wt_path`, and if cwd != wt_path, print a dimmed line: `  To start working:  cd <relative_path>`. Quote the path if it contains spaces.
+- [x] **Task 2**: Add cd hint output to `grov add` in `src/commands/add.rs`. After the existing success `println!`, compute relative path from `cwd` to `wt_path`, and if cwd != wt_path, print a dimmed line: `To start working:  cd <relative_path>`. Quote the path if it contains spaces.
 - [x] **Task 3**: Add cd hint output to `grov init` in `src/commands/init.rs`. After the existing success block, compute relative paths from `parent` (the original cwd) to both `project_dir` and `wt_path`. Print up to two dimmed lines with sentence labels. Only print each line if cwd != target.
 - [x] **Task 4**: Add integration tests in `tests/cli_init.rs` and `tests/cli_add.rs` verifying the cd hint appears in stdout after successful worktree creation, uses relative paths, and uses the expected label text.
 
