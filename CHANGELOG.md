@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0](https://github.com/vdsmon/grov/compare/v0.4.0...v0.5.0) (2026-02-19)
+
+
+### Miscellaneous Chores
+
+* Bump to 0.5.0 for crates.io publish ([#31](https://github.com/vdsmon/grov/issues/31)) ([97b72c5](https://github.com/vdsmon/grov/commit/97b72c5b0d44cef982feb045d9ec4e7b175f048e))
+
 ## [0.4.0](https://github.com/vdsmon/grov/compare/v0.4.0...v0.4.0) (2026-02-19)
 
 
