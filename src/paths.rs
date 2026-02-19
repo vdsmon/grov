@@ -51,6 +51,48 @@ pub fn repo_name_from_url(url: &str) -> String {
     name.strip_suffix(".git").unwrap_or(name).to_string()
 }
 
+/// Compute a relative path from `base` to `target`.
+///
+/// Both paths should be absolute. Returns a relative `PathBuf` suitable for
+/// display in `cd` hints. Falls back to returning `target` as-is if the
+/// relative computation fails (e.g. different prefixes on Windows).
+pub fn relative_from(target: &Path, base: &Path) -> PathBuf {
+    let mut base_iter = base.components();
+    let mut target_iter = target.components();
+    let mut common = 0;
+
+    loop {
+        match (base_iter.clone().next(), target_iter.clone().next()) {
+            (Some(b), Some(t)) if b == t => {
+                base_iter.next();
+                target_iter.next();
+                common += 1;
+            }
+            _ => break,
+        }
+    }
+
+    if common == 0 {
+        return target.to_path_buf();
+    }
+
+    let ups = base_iter.count();
+    let mut result = PathBuf::new();
+    for _ in 0..ups {
+        result.push("..");
+    }
+
+    for component in target_iter {
+        result.push(component);
+    }
+
+    if result.as_os_str().is_empty() {
+        PathBuf::from(".")
+    } else {
+        result
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -119,6 +161,46 @@ mod tests {
         assert_eq!(
             repo_name_from_url("https://github.com/user/repo.git/"),
             "repo"
+        );
+    }
+
+    #[test]
+    fn relative_from_same_dir() {
+        assert_eq!(
+            relative_from(Path::new("/a/b"), Path::new("/a/b")),
+            PathBuf::from(".")
+        );
+    }
+
+    #[test]
+    fn relative_from_child() {
+        assert_eq!(
+            relative_from(Path::new("/a/b"), Path::new("/a")),
+            PathBuf::from("b")
+        );
+    }
+
+    #[test]
+    fn relative_from_sibling() {
+        assert_eq!(
+            relative_from(Path::new("/a/c"), Path::new("/a/b")),
+            PathBuf::from("../c")
+        );
+    }
+
+    #[test]
+    fn relative_from_deeply_nested() {
+        assert_eq!(
+            relative_from(Path::new("/a/b/c/d"), Path::new("/a/x/y")),
+            PathBuf::from("../../b/c/d")
+        );
+    }
+
+    #[test]
+    fn relative_from_parent() {
+        assert_eq!(
+            relative_from(Path::new("/a"), Path::new("/a/b/c")),
+            PathBuf::from("../..")
         );
     }
 }

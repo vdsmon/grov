@@ -174,6 +174,46 @@ fn init_output_contains_both_paths() {
         );
 }
 
+#[test]
+fn init_prints_cd_hints() {
+    let tmp = TempDir::new().unwrap();
+
+    let source = tmp.path().join("source");
+    std::fs::create_dir_all(&source).unwrap();
+    run(&source, &["git", "init", "-b", "main"]);
+    run(&source, &["git", "config", "user.email", "test@test.com"]);
+    run(&source, &["git", "config", "user.name", "Test"]);
+    std::fs::write(source.join("README.md"), "# test\n").unwrap();
+    run(&source, &["git", "add", "."]);
+    run(&source, &["git", "commit", "-m", "initial"]);
+
+    let work_dir = tmp.path().join("work");
+    std::fs::create_dir_all(&work_dir).unwrap();
+
+    AssertCommand::cargo_bin("grov")
+        .unwrap()
+        .args([
+            "init",
+            "--url",
+            source.to_str().unwrap(),
+            "--name",
+            "myproject",
+            "--prefix",
+            "mp",
+            "--branch",
+            "main",
+        ])
+        .current_dir(&work_dir)
+        .assert()
+        .success()
+        .stdout(
+            predicate::str::contains("To enter the project:")
+                .and(predicate::str::contains("cd myproject"))
+                .and(predicate::str::contains("To start working:"))
+                .and(predicate::str::contains("cd myproject/mp_main")),
+        );
+}
+
 fn run(dir: &std::path::Path, args: &[&str]) {
     let output = Command::new(args[0])
         .args(&args[1..])
