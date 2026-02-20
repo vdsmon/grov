@@ -30,8 +30,12 @@ grovd() {
       ;;
 
     refresh)
-      echo "Building from $GROV_REPO ..."
-      cargo install --path "$GROV_REPO" --root "$GROV_DEV_ROOT" --force
+      local build_from="$GROV_REPO"
+      if [[ -f "$PWD/Cargo.toml" ]] && grep -q '^name = "grov"' "$PWD/Cargo.toml" 2>/dev/null; then
+        build_from="$PWD"
+      fi
+      echo "Building from $build_from ..."
+      cargo install --path "$build_from" --root "$GROV_DEV_ROOT" --force
       ;;
 
     sandbox)

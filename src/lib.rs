@@ -4,7 +4,7 @@ pub mod config;
 pub mod errors;
 pub mod git;
 pub mod paths;
-pub mod ui;
+pub mod tui;
 
 use anyhow::Context;
 use clap::Parser;
@@ -15,24 +15,11 @@ pub fn run() -> anyhow::Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::Init {
-            url,
-            name,
-            prefix,
-            branch,
-            path,
-        } => {
-            commands::init::execute(
-                url.as_deref(),
-                name.as_deref(),
-                prefix.as_deref(),
-                branch.as_deref(),
-                path.as_deref(),
-            )
-            .context("init failed")?;
+        Commands::Init { path } => {
+            commands::init::execute(path.as_deref()).context("init failed")?;
         }
         Commands::Add { branch, base, path } => {
-            commands::add::execute(&branch, base.as_deref(), path.as_deref())
+            commands::add::execute(branch.as_deref(), base.as_deref(), path.as_deref())
                 .context("add failed")?;
         }
         Commands::List { compact } => {
@@ -44,7 +31,7 @@ pub fn run() -> anyhow::Result<()> {
             delete_branch,
             force,
         } => {
-            commands::remove::execute(&name, match_mode, delete_branch, force)
+            commands::remove::execute(name.as_deref(), match_mode, delete_branch, force)
                 .context("remove failed")?;
         }
         Commands::Completions { shell } => {

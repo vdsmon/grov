@@ -211,6 +211,29 @@ fn add_prints_cd_hint() {
 }
 
 #[test]
+fn add_no_branch_non_tty_fails() {
+    let (_tmp, bare, project_dir) = common::create_bare_repo();
+
+    let main_wt = project_dir.join("test_main");
+    let output = std::process::Command::new("git")
+        .env("GIT_DIR", &bare)
+        .args(["worktree", "add", main_wt.to_str().unwrap(), "main"])
+        .output()
+        .unwrap();
+    assert!(output.status.success());
+
+    Command::cargo_bin("grov")
+        .unwrap()
+        .args(["add"])
+        .current_dir(&main_wt)
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains(
+            "branch argument is required when stdin is not a terminal",
+        ));
+}
+
+#[test]
 fn add_existing_remote_branch_no_prompt() {
     let (_tmp, bare, project_dir) = common::create_bare_repo();
 
