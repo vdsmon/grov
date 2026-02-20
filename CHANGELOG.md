@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.1](https://github.com/vdsmon/grov/compare/v0.5.0...v0.5.1) (2026-02-20)
+
+
+### Features
+
+* Rebuild TUI with ratatui and add comprehensive flow tests ([#34](https://github.com/vdsmon/grov/issues/34)) ([33c6e39](https://github.com/vdsmon/grov/commit/33c6e39e5d4eff783824d17826ccf86eab6455d3))
+
 ## [0.5.0](https://github.com/vdsmon/grov/compare/v0.4.0...v0.5.0) (2026-02-19)
 
 
