@@ -15,8 +15,8 @@ reviews:
   auto_review:
     enabled: true
     drafts: false
-    ignore_labels:
-      - "autorelease: pending"
+    labels:
+      - "!autorelease: pending"
 
   path_filters:
     - "src/**"
