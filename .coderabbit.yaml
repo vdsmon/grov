@@ -1,4 +1,32 @@
+language: "en-US"
+
 reviews:
+  profile: "chill"
+  poem: false
+  collapse_walkthrough: true
+  sequence_diagrams: false
+  changed_files_summary: true
+  estimate_code_review_effort: false
+  suggested_labels: false
+  suggested_reviewers: false
+  related_issues: false
+  related_prs: false
+
   auto_review:
+    enabled: true
+    drafts: false
     ignore_labels:
       - "autorelease: pending"
+
+  path_filters:
+    - "src/**"
+    - "tests/**"
+    - "Cargo.toml"
+
+  path_instructions:
+    - path: "**/*.rs"
+      instructions: "Focus on correctness and error handling."
+
+chat:
+  art: false
+  auto_reply: true
