@@ -15,22 +15,6 @@ pub struct Cli {
 pub enum Commands {
     /// Clone a repo as bare and create an initial worktree
     Init {
-        /// Repository URL to clone (prompted if not provided)
-        #[arg(long)]
-        url: Option<String>,
-
-        /// Project directory name (defaults to repo name from URL)
-        #[arg(long)]
-        name: Option<String>,
-
-        /// Worktree prefix (e.g. "dp" creates dp_main, dp_feature-x)
-        #[arg(long)]
-        prefix: Option<String>,
-
-        /// Initial branch to check out (defaults to detected default branch)
-        #[arg(long)]
-        branch: Option<String>,
-
         /// Parent directory to clone into (defaults to current directory)
         #[arg(long)]
         path: Option<PathBuf>,
@@ -38,8 +22,8 @@ pub enum Commands {
 
     /// Create a new worktree for a branch
     Add {
-        /// Branch name to check out or create
-        branch: String,
+        /// Branch name to check out or create (prompted if not provided)
+        branch: Option<String>,
 
         /// Base branch for new branches (defaults to the default branch)
         #[arg(long)]
@@ -61,8 +45,8 @@ pub enum Commands {
     /// Remove a worktree
     #[command(alias = "rm")]
     Remove {
-        /// Worktree name or branch to remove
-        name: String,
+        /// Worktree name or branch to remove (prompted if not provided)
+        name: Option<String>,
 
         /// How to interpret the name when resolving a worktree
         #[arg(long = "match", value_enum, default_value_t = RemoveMatchMode::Auto)]

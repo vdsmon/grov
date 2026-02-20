@@ -3,7 +3,7 @@ use std::path::{Path, PathBuf};
 use crate::errors::Result;
 use crate::git::executor::{run_git, run_git_ok};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct WorktreeInfo {
     pub path: PathBuf,
     pub head: String,
@@ -130,6 +130,71 @@ pub fn worktree_dir_name(worktree: &WorktreeInfo) -> String {
         .file_name()
         .map(|name| name.to_string_lossy().to_string())
         .unwrap_or_default()
+}
+
+/// List available branches that don't already have a worktree.
+///
+/// Collects local and remote branches, deduplicates (local takes precedence),
+/// strips `origin/` prefix from remote branches, excludes `HEAD`, and filters
+/// out branches that already have a worktree.
+pub fn available_branches(repo: &Path, worktrees: &[WorktreeInfo]) -> Result<Vec<String>> {
+    use std::collections::BTreeSet;
+
+    let worktree_branches: std::collections::HashSet<&str> = worktrees
+        .iter()
+        .filter_map(|wt| wt.branch.as_deref())
+        .collect();
+
+    let mut branches = BTreeSet::new();
+
+    // Local branches: git for-each-ref --format='%(refname:short)' refs/heads/
+    let local_output = run_git_ok(
+        Some(repo),
+        &["for-each-ref", "--format=%(refname:short)", "refs/heads/"],
+    )?;
+    for line in local_output.lines() {
+        let name = line.trim();
+        if !name.is_empty() {
+            branches.insert(name.to_string());
+        }
+    }
+
+    // Remote branches: git for-each-ref --format='%(refname:short)' refs/remotes/origin/
+    let remote_output = run_git_ok(
+        Some(repo),
+        &[
+            "for-each-ref",
+            "--format=%(refname:short)",
+            "refs/remotes/origin/",
+        ],
+    )?;
+    for line in remote_output.lines() {
+        let name = line.trim();
+        // Strip origin/ prefix, skip HEAD
+        if let Some(branch) = name.strip_prefix("origin/")
+            && branch != "HEAD"
+            && !branch.is_empty()
+        {
+            branches.insert(branch.to_string());
+        }
+    }
+
+    // Filter out branches that already have a worktree
+    let result: Vec<String> = branches
+        .into_iter()
+        .filter(|b| !worktree_branches.contains(b.as_str()))
+        .collect();
+
+    Ok(result)
+}
+
+/// Try to delete a local branch safely (with `-d`).
+///
+/// Returns `Ok(())` on success. If the branch is not fully merged, returns
+/// an error whose message contains "not fully merged".
+pub fn safe_delete_branch(repo: &Path, name: &str) -> Result<()> {
+    run_git_ok(Some(repo), &["branch", "-d", name])?;
+    Ok(())
 }
 
 #[cfg(test)]
