@@ -198,14 +198,9 @@ impl InitWizard {
         ];
         for (i, &(label, value)) in fields.iter().enumerate() {
             if i < self.step && !value.is_empty() {
-                let display = if label == "Prefix:" && value.is_empty() {
-                    "(none)"
-                } else {
-                    value
-                };
                 let line = Line::from(vec![
                     Span::styled(format!("  {label:<12}"), theme::DIM),
-                    Span::raw(display),
+                    Span::raw(value),
                 ]);
                 frame.render_widget(Paragraph::new(line), Rect::new(0, y, area.width, 1));
                 y += 1;
