@@ -161,6 +161,124 @@ fn remove_with_delete_branch() {
 }
 
 #[test]
+fn remove_no_name_non_tty_fails() {
+    let (_tmp, bare, project_dir) = common::create_bare_repo();
+
+    let main_wt = project_dir.join("test_main");
+    let output = std::process::Command::new("git")
+        .env("GIT_DIR", &bare)
+        .args(["worktree", "add", main_wt.to_str().unwrap(), "main"])
+        .output()
+        .unwrap();
+    assert!(output.status.success());
+
+    Command::cargo_bin("grov")
+        .unwrap()
+        .args(["remove"])
+        .current_dir(&main_wt)
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains(
+            "worktree name is required when stdin is not a terminal",
+        ));
+}
+
+#[test]
+fn remove_with_delete_branch_still_works() {
+    let (_tmp, bare, project_dir) = common::create_bare_repo();
+
+    let main_wt = project_dir.join("test_main");
+    let output = std::process::Command::new("git")
+        .env("GIT_DIR", &bare)
+        .args(["worktree", "add", main_wt.to_str().unwrap(), "main"])
+        .output()
+        .unwrap();
+    assert!(output.status.success());
+
+    let del_wt = project_dir.join("test_flag-branch");
+    let output = std::process::Command::new("git")
+        .env("GIT_DIR", &bare)
+        .args([
+            "worktree",
+            "add",
+            "-b",
+            "flag-branch",
+            del_wt.to_str().unwrap(),
+            "main",
+        ])
+        .output()
+        .unwrap();
+    assert!(output.status.success());
+
+    Command::cargo_bin("grov")
+        .unwrap()
+        .args(["remove", "flag-branch", "--delete-branch"])
+        .current_dir(&main_wt)
+        .assert()
+        .success()
+        .stdout(
+            predicate::str::contains("Removed worktree")
+                .and(predicate::str::contains("Deleted branch")),
+        );
+
+    // Verify branch is actually deleted
+    let output = std::process::Command::new("git")
+        .env("GIT_DIR", &bare)
+        .args(["branch", "--list", "flag-branch"])
+        .output()
+        .unwrap();
+    assert!(output.stdout.is_empty());
+}
+
+#[test]
+fn remove_non_tty_no_branch_delete_prompt() {
+    let (_tmp, bare, project_dir) = common::create_bare_repo();
+
+    let main_wt = project_dir.join("test_main");
+    let output = std::process::Command::new("git")
+        .env("GIT_DIR", &bare)
+        .args(["worktree", "add", main_wt.to_str().unwrap(), "main"])
+        .output()
+        .unwrap();
+    assert!(output.status.success());
+
+    let del_wt = project_dir.join("test_keep-branch");
+    let output = std::process::Command::new("git")
+        .env("GIT_DIR", &bare)
+        .args([
+            "worktree",
+            "add",
+            "-b",
+            "keep-branch",
+            del_wt.to_str().unwrap(),
+            "main",
+        ])
+        .output()
+        .unwrap();
+    assert!(output.status.success());
+
+    // Remove without --delete-branch in non-TTY: branch should be preserved
+    Command::cargo_bin("grov")
+        .unwrap()
+        .args(["remove", "keep-branch"])
+        .current_dir(&main_wt)
+        .assert()
+        .success()
+        .stdout(
+            predicate::str::contains("Removed worktree")
+                .and(predicate::str::contains("Deleted branch").not()),
+        );
+
+    // Verify branch still exists
+    let output = std::process::Command::new("git")
+        .env("GIT_DIR", &bare)
+        .args(["branch", "--list", "keep-branch"])
+        .output()
+        .unwrap();
+    assert!(!output.stdout.is_empty());
+}
+
+#[test]
 fn remove_ambiguous_auto_fails_with_candidates() {
     let (_tmp, main_wt, branch_wt, dir_wt) = setup_ambiguous_remove_case();
 
